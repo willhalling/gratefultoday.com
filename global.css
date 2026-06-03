@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import 'tailwindcss';
+
+@plugin './hero.ts';
+
+@source './node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+@config "./tailwind.config.js";
+
+:root {
+  /* Grateful Today Brand Colors */
+  --brand-green: #15803d; /* Primary brand color */
+  --brand-amber: #b45309; /* Warm accent */
+  --brand-gray: #1f2937; /* Dark text/backgrounds */
+  --brand-light: #f9fafb; /* Light backgrounds */
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 16px; /* Much thicker scrollbar */
+  height: 16px; /* For horizontal scrollbars */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track); /* Black background */
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-primary) !important;
+  border-radius: 8px;
+  border: 2px solid var(--scrollbar-track); /* Black border around thumb */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-primary-hover) !important;
+}
+
+.custom-scrollbar {
+  scrollbar-width: auto; /* Make it thick on Firefox too */
+  scrollbar-color: var(--scrollbar-primary) var(--scrollbar-track); /* Red thumb, black track */
+}
+
+/* Ensure scrollbar styles work in different contexts */
+.custom-scrollbar * {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-primary) var(--scrollbar-track);
+}
+
+/* Playfair Display Headings */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  h1 {
+    font-weight: 700;
+  }
+
+  h2 {
+    font-weight: 600;
+  }
+
+  .font-heading {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+/* Grateful Today Theme Custom Components */
+@layer components {
+  /* Select arrow with Forest Green styling */
+  .select-arrow-primary {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(1, 51, 40)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  }
+
+  /* PRIMARY button with Brand Green styling */
+  .btn-primary {
+    @apply bg-green-700 hover:bg-green-800 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  }
+
+  /* Dark button with Brand Gray styling */
+  .btn-dark {
+    @apply bg-gray-800 hover:bg-gray-900 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  }
+
+  /* Secondary button with Brand Amber styling (warm accent) */
+  .btn-terracotta {
+    @apply bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  }
+
+  /* Brand green accent button */
+  .btn-forest {
+    @apply bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  }
+
+  /* Dark surface cards with prominence */
+  .card-dark {
+    @apply bg-gray-800 text-white border border-gray-700 rounded-xl shadow-premium;
+  }
+
+  /* Brand green surface cards */
+  .card-forest {
+    @apply bg-green-700 text-white border border-green-600 rounded-xl shadow-soft;
+  }
+
+  /* Light surface cards (for contrast) */
+  .card-light {
+    @apply bg-white border border-gray-200 rounded-xl shadow-soft;
+  }
+
+  /* Gradient backgrounds with brand colors */
+  .bg-gradient-earth {
+    background: linear-gradient(
+      135deg,
+      var(--brand-green) 0%,
+      var(--brand-gray) 50%,
+      var(--brand-amber) 100%
+    );
+  }
+
+  .bg-gradient-forest {
+    background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-gray) 100%);
+  }
+
+  .bg-gradient-warm {
+    background: linear-gradient(135deg, var(--brand-light) 0%, var(--brand-amber) 100%);
+  }
+
+  /* Dark-prominent gradient */
+  .bg-gradient-dark-forest {
+    background: linear-gradient(135deg, var(--brand-gray) 0%, var(--brand-green) 100%);
+  }
+
+  /* Text color utilities */
+  .text-forest {
+    color: var(--brand-green);
+  }
+
+  .text-midnight {
+    color: var(--brand-gray);
+  }
+
+  .text-earth {
+    color: var(--brand-amber);
+  }
+
+  /* Selection styling with Brand Amber */
+  ::selection {
+    background-color: var(--brand-amber);
+    color: white;
+  }
+
+  ::-moz-selection {
+    background-color: var(--brand-amber);
+    color: white;
+  }
+}

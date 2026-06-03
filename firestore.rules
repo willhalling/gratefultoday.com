@@ -1,0 +1,186 @@
+rules_version = '2';
+
+service cloud.firestore {
+    // START Run Payments with Stripe
+    match /databases/{database}/documents {
+    match /customers/{uid} {
+      allow read: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+    
+    // Sobriety Coins - allow anyone (including guests) to create and view
+    match /sobrietyChips/{coinId} {
+      allow read: if true;
+      allow create: if true;
+    }
+
+    match /products/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+    // END Run Payments with Stripe
+		match /usernames/{userId} {
+      // Any one can read but only admin can write
+      allow read: if true
+      allow write: if false
+  	}
+    match /username_key/{userId} {
+      // Any one can read but only user can write
+      allow read: if true
+      allow write: if request.auth.uid == userId
+    }
+    // Rule for the 'users' collection
+    match /users/{userId} {
+      // Any one can read but only user can write
+      allow read: if true
+      allow write: if request.auth.uid == userId
+      
+      // Video management - user's own videos only
+      match /videos/{videoId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // YouTube scripts - admin only
+    match /youtubeScripts/{scriptId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Newsletter collection - admin/server can write, anyone can read
+    match /newsletter/{dayId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Newsletter subscribers - admin/server only
+    match /newsletterSubscribers/{subscriberId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Coffee and Gratitude collection (legacy) - admin/server can write, anyone can read
+    match /coffeeAndGratitude/{dayId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Video editor data - allow authenticated users
+    match /videoData/{videoId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Match all website pages
+    match /websites/{pageId} {
+
+      // Allow read access if the page is public or the user is an owner or editor
+      allow read: if isPublicPage() || isOwner() || isEditor();
+
+      // Allow creating a page if the pageId does not already exist and the user is authenticated
+      allow create: if request.auth != null && !exists(/databases/$(database)/documents/websites/$(pageId));
+
+      // Allow updating the page only if the user is an owner or editor
+      // allow update: if isOwner() || isEditor();
+
+      allow update: if isOwner() || isEditor() && request.resource.data.keys().hasOnly(['title', 'description', 'media', 'editorIds']);
+
+      // Allow deletion if the user is an owner or admin
+      allow delete: if isOwner() || isAdmin();
+    }
+    
+    // Media Library - shared media assets for video editor
+    match /mediaLibrary/{mediaId} {
+      // Anyone authenticated can read
+      allow read: if request.auth != null;
+      
+      // Anyone authenticated can create (upload)
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['type', 'url', 'name', 'category', 'uploadedAt', 'size', 'mimeType'])
+        && request.resource.data.type in ['image', 'audio', 'video']
+        && request.resource.data.category in ['Nature', 'Abstract', 'Music', 'Ambient', 'Voiceover', 'Effects', 'Other'];
+      
+      // Anyone authenticated can delete (remove from library)
+      allow delete: if request.auth != null;
+      
+      // No updates needed for now
+      allow update: if false;
+    }
+    
+    // Gratitude Wall - community posts with rate limiting
+    match /gratitudePosts/{postId} {
+      // Anyone can read non-flagged posts
+      allow read: if true;
+      
+      // Authenticated users can create posts with validation
+      allow create: if request.auth != null
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.flagged == false
+        && request.resource.data.flagCount == 0
+        && request.resource.data.get('isArchived', false) == false
+        && (!exists(/databases/$(database)/documents/gratitudePosts/$(postId)));
+      
+      // Users can flag posts (increment flagCount, optionally set flagged to true)
+      // OR admins can archive posts
+      allow update: if request.auth != null
+        && (
+          // Regular users flagging posts
+          (
+            resource.data.userId != request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['flagCount', 'flagged'])
+            && request.resource.data.flagCount > resource.data.flagCount
+            && (
+              request.resource.data.flagged == false
+              || (request.resource.data.flagged == true && resource.data.flagged == false)
+            )
+          )
+          // OR admin archiving posts
+          || (
+            isGratitudeAdmin()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isArchived'])
+            && request.resource.data.isArchived == true
+          )
+        );
+      
+      // No one can delete (admin only via console)
+      allow delete: if false;
+    }
+
+    // Helper functions
+    function isOwner() {
+      return request.auth != null && resource.data.ownerIds != null && resource.data.ownerIds.hasAny([request.auth.uid]);
+    }
+
+    function isEditor() {
+      return request.auth != null && resource.data.editorIds != null && resource.data.editorIds.hasAny([request.auth.uid]);
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function isPublicPage() {
+      return resource.data.isPublic == true;
+    }
+    
+    function isGratitudeAdmin() {
+      return request.auth != null && request.auth.uid == 'dsA7nNvIaWckmHSJZMfBhGAPBFc2';
+    }
+  }
+}

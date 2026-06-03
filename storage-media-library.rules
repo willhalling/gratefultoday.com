@@ -1,0 +1,28 @@
+// Firebase Storage Security Rules for Media Library
+// Add these rules to your existing storage.rules file
+
+// Media Library Storage - Shared across all users
+match /media-library/{allPaths=**} {
+  // Anyone authenticated can read
+  allow read: if request.auth != null;
+  
+  // Anyone authenticated can create (upload)
+  // Validate file types and sizes
+  allow create: if request.auth != null
+    && (
+      // Images: max 10MB
+      (request.resource.contentType.matches('image/.*') && request.resource.size < 10 * 1024 * 1024)
+      ||
+      // Audio: max 50MB
+      (request.resource.contentType.matches('audio/.*') && request.resource.size < 50 * 1024 * 1024)
+      ||
+      // Video: max 100MB
+      (request.resource.contentType.matches('video/.*') && request.resource.size < 100 * 1024 * 1024)
+    );
+  
+  // Anyone authenticated can delete
+  allow delete: if request.auth != null;
+  
+  // No updates
+  allow update: if false;
+}

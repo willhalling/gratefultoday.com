@@ -1,0 +1,122 @@
+
+[2K[1G[1myarn run v1.22.19[22m
+[2K[1G[2m$ next build[22m
+   [1m[38;2;173;127;168m▲ Next.js 15.5.18[39m[22m
+   - Environments: .env
+
+ [37m[1m [22m[39m Creating an optimized production build ...
+ ⚠ Compiled with warnings in 9.5s
+
+../../node_modules/@protobufjs/inquire/index.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../node_modules/@protobufjs/inquire/index.js
+../../node_modules/protobufjs/src/util/minimal.js
+../../node_modules/protobufjs/src/index-minimal.js
+../../node_modules/protobufjs/src/index-light.js
+../../node_modules/protobufjs/src/index.js
+../../node_modules/protobufjs/index.js
+../../node_modules/@grpc/proto-loader/build/src/index.js
+../../node_modules/@firebase/firestore/dist/index.node.mjs
+../../node_modules/firebase/firestore/dist/index.mjs
+./lib/sobriety-chips.ts
+./app/c/[id]/page.tsx
+
+(node:77831) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/will/Documents/monorepo/apps/gratefultoday/hero.ts?id=1779480987304 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/will/Documents/monorepo/apps/gratefultoday/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m[1m✓[22m[39m Compiled successfully in 23.2s
+ [37m[1m [22m[39m Skipping validation of types
+ [37m[1m [22m[39m Skipping linting
+[?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m..[39m[2K[1G[?25h [33m[1m⚠[22m[39m Using edge runtime on a page currently disables static generation for that page
+[?25l [36m.[39m [2K[1G[?25h    [32m[1m✓[22m[39m Collecting page data 
+[?25l [37m[1m [22m[39m Generating static pages (0/104)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/104)  [36m[=   ][39m[2K[1G [37m[1m [22m[39m Generating static pages (19/104)  [36m[==  ][39m[2K[1G[?25h🔧 Initializing Firebase Admin for PRODUCTION
+FIREBASE_SERVICE_ACCOUNT_KEY exists: true
+FIREBASE_SERVICE_ACCOUNT_KEY length: 2365
+✅ Firebase Admin initialized with service account for project grateful-today-761f2
+🔍 hasMoreQuotes check: {
+  displayedLength: 0,
+  allQuotesLength: 0,
+  hasMoreQuotes: false,
+  searchTerm: false
+}
+Today stats: { count: 0, today: '2026-05-21T23:00:00.000Z', totalDocs: 65 }
+[?25h [32m[1m✓[22m[39m Generating static pages (104/104)
+[?25l [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[?25l [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Collecting build traces     [32m[1m✓[22m[39m Collecting build traces 
+[2K[1G[?25h [37m[1m [22m[39m Finalizing page optimization     [32m[1m✓[22m[39m Finalizing page optimization 
+
+[4mRoute (app)[24m                                       [4mSize[24m  [4mFirst Load JS[24m  [4mRevalidate[24m  [4mExpire[24m
+┌ ○ /                                          3.35 kB         [37m[1m238 kB[22m[39m
+├ ○ /_not-found                                  210 B         [37m[1m103 kB[22m[39m
+├ ○ /about                                       210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin                                     5.22 kB         [37m[1m283 kB[22m[39m
+├ ○ /admin/audio/generate                      54.9 kB         [37m[1m404 kB[22m[39m
+├ ○ /admin/audio/transcribe                    6.71 kB         [37m[1m320 kB[22m[39m
+├ ○ /admin/brand                                 176 B         [37m[1m106 kB[22m[39m
+├ ○ /admin/brand/guidelines                      210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin/brand/midjourney-guidelines           210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin/brand/suno-guidelines                 210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin/brand/youtube-example                 210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin/brand/youtube-guidelines              210 B         [37m[1m103 kB[22m[39m
+├ ○ /admin/invoice                              182 kB         [37m[1m489 kB[22m[39m
+├ ○ /admin/newsletter/generate                 2.85 kB         [37m[1m309 kB[22m[39m
+├ ○ /admin/newsletter/list                     2.17 kB         [37m[1m312 kB[22m[39m
+├ ○ /admin/video-editor                        5.47 kB         [37m[1m220 kB[22m[39m
+├ ƒ /admin/video-editor/[slug]                  319 kB         [37m[1m661 kB[22m[39m
+├ ○ /admin/youtube/generate                    6.48 kB         [37m[1m320 kB[22m[39m
+├ ○ /admin/youtube/scripts                     3.74 kB         [37m[1m301 kB[22m[39m
+├ ○ /affirmations                                210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/audio/elevenlabs                        210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/audio/transcribe                        210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/invoice/send                            210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/generate                     210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/list                         210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/preferences                  210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/save                         210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/send-test                    210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/newsletter/subscribe                    210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/pdf/[slug]                              210 B         [37m[1m103 kB[22m[39m
+├ ○ /api/stats/today                             210 B         [37m[1m103 kB[22m[39m         30s      1y
+├ ƒ /api/subscribe                               210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/youtube/generate                        210 B         [37m[1m103 kB[22m[39m
+├ ƒ /api/youtube/scripts                         210 B         [37m[1m103 kB[22m[39m
+├ ƒ /apple-icon                                  210 B         [37m[1m103 kB[22m[39m
+├ ○ /blog                                        176 B         [37m[1m106 kB[22m[39m
+├ ● /blog/[slug]                                 176 B         [37m[1m106 kB[22m[39m
+├   ├ /blog/28-positive-sobriety-affirmations
+├   ├ /blog/the-man-in-the-glass-poem
+├   ├ /blog/16-powerful-quotes-on-death-grief
+├   └ [+2 more paths]
+├ ○ /brand-test                                14.3 kB         [37m[1m269 kB[22m[39m
+├ ƒ /c/[id]                                    13.1 kB         [37m[1m222 kB[22m[39m
+├ ○ /contact                                     210 B         [37m[1m103 kB[22m[39m
+├ ƒ /icon                                        210 B         [37m[1m103 kB[22m[39m
+├ ○ /newsletter                                5.76 kB         [37m[1m391 kB[22m[39m
+├ ○ /newsletter/preferences                    3.08 kB         [37m[1m311 kB[22m[39m
+├ ○ /privacy                                     210 B         [37m[1m103 kB[22m[39m
+├ ○ /quotes                                    6.55 kB         [37m[1m195 kB[22m[39m
+├ ○ /robots.txt                                  210 B         [37m[1m103 kB[22m[39m
+├ ○ /sign-in                                   1.88 kB         [37m[1m295 kB[22m[39m
+├ ○ /sitemap.xml                                 210 B         [37m[1m103 kB[22m[39m
+├ ○ /sobriety-chips                              11 kB         [37m[1m181 kB[22m[39m
+├ ● /sobriety-chips/[slug]                     13.4 kB         [37m[1m317 kB[22m[39m
+├   ├ /sobriety-chips/24-hours
+├   ├ /sobriety-chips/2-days
+├   ├ /sobriety-chips/3-days
+├   └ [+49 more paths]
+├ ƒ /sobriety-chips/[slug]/[id]                8.64 kB         [37m[1m217 kB[22m[39m
+├ ○ /terms                                       210 B         [37m[1m103 kB[22m[39m
+└ ○ /wall                                      8.81 kB         [37m[1m340 kB[22m[39m
++ First Load JS shared by all                   [37m[1m102 kB[22m[39m
+  ├ chunks/1255-5cc9cf121c2fffaa.js            45.8 kB
+  ├ chunks/4bd1b696-2fbb49a7b03e9cd6.js        54.2 kB
+  └ other shared chunks (total)                 2.3 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses [36mgenerateStaticParams[39m)
+ƒ  (Dynamic)  server-rendered on demand
+
+[?25h[2K[1G✨  Done in 32.24s.

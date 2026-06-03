@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Week Journey Users
+    match /weekJourneyUsers/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Only server can create/update users
+      allow write: if false;
+      
+      // User responses
+      match /responses/{dayId} {
+        // Users can read their own responses
+        allow read: if request.auth != null && request.auth.uid == userId;
+        
+        // Only server can write responses
+        allow write: if false;
+      }
+    }
+  }
+}

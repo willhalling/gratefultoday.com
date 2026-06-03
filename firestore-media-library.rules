@@ -1,0 +1,20 @@
+// Firestore Security Rules for Media Library
+// Add these rules to your existing firestore.rules file
+
+// Media Library Collection - Shared across all authenticated users
+match /mediaLibrary/{mediaId} {
+  // Anyone authenticated can read
+  allow read: if request.auth != null;
+  
+  // Anyone authenticated can create (upload)
+  allow create: if request.auth != null
+    && request.resource.data.keys().hasAll(['type', 'url', 'name', 'category', 'uploadedAt', 'size', 'mimeType'])
+    && request.resource.data.type in ['image', 'audio', 'video']
+    && request.resource.data.category in ['Nature', 'Abstract', 'Music', 'Ambient', 'Voiceover', 'Effects', 'Other'];
+  
+  // Anyone authenticated can delete (remove from library)
+  allow delete: if request.auth != null;
+  
+  // No updates needed for now (can add later if needed)
+  allow update: if false;
+}

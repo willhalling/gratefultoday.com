@@ -1,0 +1,20 @@
+{
+  "name": "gratefultoday-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf lib"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^6.1.1",
+    "undici": "^6.19.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
