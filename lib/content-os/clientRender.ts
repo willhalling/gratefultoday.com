@@ -15,6 +15,8 @@ export interface RenderPostInBrowserOptions {
   inputProps: GratitudePostProps;
   onProgress?: (progress: ClientRenderProgress) => void;
   signal?: AbortSignal;
+  /** Restrict rendering to a subset of frames, e.g. [0, 59] for a 2-second preview. */
+  frameRange?: [number, number] | null;
 }
 
 /**
@@ -26,6 +28,7 @@ export async function renderPostInBrowser({
   inputProps,
   onProgress,
   signal,
+  frameRange,
 }: RenderPostInBrowserOptions): Promise<Blob> {
   const durationInFrames = computeDurationInFrames(inputProps.beats);
 
@@ -43,12 +46,13 @@ export async function renderPostInBrowser({
     videoCodec: 'h264',
     container: 'mp4',
     signal: signal ?? null,
+    frameRange: frameRange ?? null,
     onProgress: onProgress
       ? (p) =>
           onProgress({
             renderedFrames: p.renderedFrames,
             encodedFrames: p.encodedFrames,
-            totalFrames: durationInFrames,
+            totalFrames: frameRange ? frameRange[1] - frameRange[0] + 1 : durationInFrames,
           })
       : null,
   });

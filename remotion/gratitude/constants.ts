@@ -35,15 +35,18 @@ export const PILL_LINE_GAP_PX = 12;
 export const LETTER_SPACING_PX = 1.4;
 
 // Film overlay cadence (a low fps gives it a flickery, filmic feel).
-export const FILM_OVERLAY_FPS = 4;
+// Lowered from 4 -> 3 so dust flickers update less often (~0.33s per frame).
+export const FILM_OVERLAY_FPS = 3;
 export const FILM_OVERLAY_FRAMES = 24;
+// Toned down from the aggressive pass — about 1/3 the dust count and less
+// frequent streaks. Still visibly filmic, no longer noisy.
 export const FILM_DUST_PER_FRAME = 14;
 export const FILM_DUST_STDDEV = 4;
 export const FILM_STREAK_MAX = 2;
 export const FILM_STREAK_VISIBLE_S = 0.6;
-export const FILM_STREAK_GAP_S = 1.8;
+export const FILM_STREAK_GAP_S = 2.4;
 export const FILM_STREAK_WIDTH_CHOICES = [1, 1, 1, 1, 2, 2, 3];
-export const FILM_STREAK_ALPHA_RANGE: [number, number] = [0.05, 0.3];
+export const FILM_STREAK_ALPHA_RANGE: [number, number] = [0.06, 0.28];
 
 // Default font key used by the Python pipeline.
 export const DEFAULT_FONT_CHOICE = 'playfair';

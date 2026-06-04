@@ -67,6 +67,8 @@ function normalizePost(raw: admin.firestore.DocumentData, id: string): ContentOs
     notes: raw.notes || '',
     background: raw.background || '',
     music: raw.music || '',
+    renderUrl: raw.renderUrl || undefined,
+    renderedAt: raw.renderedAt || undefined,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
@@ -81,9 +83,10 @@ export async function GET(request: NextRequest) {
     const category = (searchParams.get('category') || '').trim();
     const topic = (searchParams.get('topic') || '').trim();
     const status = (searchParams.get('status') || '').trim();
-    const sort = (searchParams.get('sort') || 'updated').trim();
+    const sort = (searchParams.get('sort') || 'created').trim();
 
-    const snapshot = await db.collection(COLLECTION).orderBy('updatedAt', 'desc').limit(500).get();
+    const orderField = sort === 'updated' ? 'updatedAt' : 'createdAt';
+    const snapshot = await db.collection(COLLECTION).orderBy(orderField, 'desc').limit(500).get();
 
     let posts = snapshot.docs.map((doc) => normalizePost(doc.data(), doc.id));
 
@@ -107,6 +110,14 @@ export async function GET(request: NextRequest) {
 
     if (sort === 'score') {
       posts = [...posts].sort((a, b) => b.score - a.score);
+    } else if (sort === 'updated') {
+      posts = [...posts].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      );
+    } else {
+      posts = [...posts].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
     }
 
     return NextResponse.json({ posts });

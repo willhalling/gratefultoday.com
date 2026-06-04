@@ -28,6 +28,7 @@ export function getFirebaseAdmin() {
           // Emulator does not require credentials
           app = admin.initializeApp({
             projectId: 'grateful-today-761f2',
+            storageBucket: 'grateful-today-761f2.appspot.com',
           });
         } else {
           // Use service account in production to avoid emulator fallback
@@ -58,13 +59,15 @@ export function getFirebaseAdmin() {
           // Avoid ADC interfering when explicit credential is provided
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
+          const projectId = serviceAccount.project_id || 'grateful-today-761f2';
           app = admin.initializeApp({
             credential: admin.credential.cert({
-              projectId: serviceAccount.project_id || 'grateful-today-761f2',
+              projectId,
               clientEmail: serviceAccount.client_email,
               privateKey: serviceAccount.private_key,
             }),
-            projectId: serviceAccount.project_id || 'grateful-today-761f2',
+            projectId,
+            storageBucket: `${projectId}.appspot.com`,
           });
           console.log(
             '✅ Firebase Admin initialized with service account for project',

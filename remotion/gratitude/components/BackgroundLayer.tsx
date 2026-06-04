@@ -1,5 +1,6 @@
 import React from 'react';
-import { AbsoluteFill, Img, OffthreadVideo, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
+import { Video } from '@remotion/media';
 import { IMAGE_ZOOM_END } from '../constants';
 
 interface BackgroundLayerProps {
@@ -18,15 +19,17 @@ export const BackgroundLayer: React.FC<BackgroundLayerProps> = ({ background }) 
   }
 
   if (background.kind === 'video') {
+    // <Video> from @remotion/media works in both server renders and
+    // @remotion/web-renderer (which does NOT support <OffthreadVideo>).
     return (
       <AbsoluteFill style={{ overflow: 'hidden' }}>
-        <OffthreadVideo
+        <Video
           src={background.url}
           muted
+          objectFit="cover"
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
           }}
         />
       </AbsoluteFill>

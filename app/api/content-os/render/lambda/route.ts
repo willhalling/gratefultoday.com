@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderMediaOnLambda } from '@remotion/lambda/client';
-import { getAdminApp } from '@/lib/firebase-admin';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import { computeDurationInFrames } from '@/remotion/gratitude/constants';
+import { backgroundKind } from '@/lib/content-os/backgroundKind';
 import type { ContentOsPost } from '@/types/content-os';
 import type { GratitudePostProps } from '@/remotion/gratitude/constants';
 import type { AwsRegion } from '@remotion/lambda/client';
@@ -16,8 +17,7 @@ function postToInputProps(post: ContentOsPost): GratitudePostProps {
   const props: GratitudePostProps = { beats };
   if (post.background) {
     const url = post.background.trim();
-    const isVideo = /\.(mp4|mov|m4v|webm|mkv)$/i.test(url);
-    props.background = { url, kind: isVideo ? 'video' : 'image' };
+    props.background = { url, kind: backgroundKind(url) };
   }
   if (post.music) props.music = { url: post.music.trim() };
   return props;
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { db } = getAdminApp();
-  const postRef = db.collection('content_os_posts').doc(body.postId);
+  const { db } = getFirebaseAdmin();
+  const postRef = db.collection('contentOsPosts').doc(body.postId);
   const snapshot = await postRef.get();
   if (!snapshot.exists) {
     return NextResponse.json({ error: 'Post not found.' }, { status: 404 });

@@ -78,6 +78,10 @@ const QUALITY_REJECT_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
   { pattern: /that's why/i, reason: 'moral explanation ending' },
   { pattern: /turns out/i, reason: 'plot-twist framing' },
   { pattern: /(soap opera|dramatic reveal|plot twist)/i, reason: 'dramatic fiction style' },
+  // Hook-quality: first beat must not be a flat "X used to / always / spent years" opener
+  { pattern: /^(my (dad|mum|mom|mother|father|sister|brother|gran|grandma|grandad|grandpa|friend|wife|husband|partner) (used to|always|would always|never))/i, reason: 'flat statement opener — needs a question or jolt' },
+  { pattern: /^i spent years/i, reason: 'flat narrative opener — needs a question or jolt' },
+  { pattern: /^i (used to|always|would always|never)/i, reason: 'flat statement opener — needs a question or jolt' },
 ];
 
 async function readPromptFile(relativePath: string): Promise<string> {
@@ -234,8 +238,23 @@ function evaluateQuality(entry: GeneratedEntry): QualityResult {
     }
   }
 
-  for (const rule of QUALITY_REJECT_PATTERNS) {
+  // Quality patterns that apply to all beats combined.
+  const fullTextRules = QUALITY_REJECT_PATTERNS.filter(
+    (r) => !r.reason.includes('opener'),
+  );
+  for (const rule of fullTextRules) {
     if (rule.pattern.test(joined)) {
+      return { ok: false, reason: rule.reason };
+    }
+  }
+
+  // Hook-quality patterns only apply to the first beat.
+  const firstBeat = (entry.beats[0] ?? '').trim();
+  const hookRules = QUALITY_REJECT_PATTERNS.filter((r) =>
+    r.reason.includes('opener'),
+  );
+  for (const rule of hookRules) {
+    if (rule.pattern.test(firstBeat)) {
       return { ok: false, reason: rule.reason };
     }
   }

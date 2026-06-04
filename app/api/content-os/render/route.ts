@@ -3,10 +3,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { randomUUID } from 'crypto';
-import { bundle } from '@remotion/bundler';
-import { renderMedia, selectComposition } from '@remotion/renderer';
-import { getAdminApp } from '@/lib/firebase-admin';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import { computeDurationInFrames } from '@/remotion/gratitude/constants';
+import { backgroundKind } from '@/lib/content-os/backgroundKind';
 import type { ContentOsPost } from '@/types/content-os';
 import type { GratitudePostProps } from '@/remotion/gratitude/constants';
 
@@ -16,8 +15,9 @@ export const maxDuration = 300;
 
 let bundlePromise: Promise<string> | null = null;
 
-function getBundle(): Promise<string> {
+async function getBundle(): Promise<string> {
   if (!bundlePromise) {
+    const { bundle } = await import('@remotion/bundler');
     bundlePromise = bundle({
       entryPoint: path.join(process.cwd(), 'remotion', 'index.tsx'),
       // Skip webpack overrides — keep default config so it picks up tsconfig paths.
@@ -36,8 +36,7 @@ function postToInputProps(post: ContentOsPost): GratitudePostProps {
 
   if (post.background) {
     const url = post.background.trim();
-    const isVideo = /\.(mp4|mov|m4v|webm|mkv)$/i.test(url);
-    props.background = { url, kind: isVideo ? 'video' : 'image' };
+    props.background = { url, kind: backgroundKind(url) };
   }
 
   if (post.music) {
@@ -59,8 +58,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'postId is required.' }, { status: 400 });
   }
 
-  const { db, storage } = getAdminApp();
-  const postRef = db.collection('content_os_posts').doc(body.postId);
+  const { db, storage } = getFirebaseAdmin();
+  const postRef = db.collection('contentOsPosts').doc(body.postId);
   const snapshot = await postRef.get();
   if (!snapshot.exists) {
     return NextResponse.json({ error: 'Post not found.' }, { status: 404 });
@@ -76,6 +75,7 @@ export async function POST(request: NextRequest) {
 
   const tmpFile = path.join(os.tmpdir(), `gratitude-${randomUUID()}.mp4`);
   try {
+    const { renderMedia, selectComposition } = await import('@remotion/renderer');
     const serveUrl = await getBundle();
     const composition = await selectComposition({
       serveUrl,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       inputProps,
     });
 
-    const bucket = storage.bucket();
+    const bucket = storage.bucket('grateful-today-761f2.appspot.com');
     const destination = `content-os-renders/${post.id}/${Date.now()}.mp4`;
     await bucket.upload(tmpFile, {
       destination,

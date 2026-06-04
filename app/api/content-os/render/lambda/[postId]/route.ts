@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRenderProgress } from '@remotion/lambda/client';
-import { getAdminApp } from '@/lib/firebase-admin';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import type { AwsRegion } from '@remotion/lambda/client';
 import type { ContentOsPost } from '@/types/content-os';
 
@@ -19,8 +19,8 @@ export async function GET(
   context: { params: Promise<{ postId: string }> }
 ) {
   const { postId } = await context.params;
-  const { db } = getAdminApp();
-  const postRef = db.collection('content_os_posts').doc(postId);
+  const { db } = getFirebaseAdmin();
+  const postRef = db.collection('contentOsPosts').doc(postId);
   const snapshot = await postRef.get();
   if (!snapshot.exists) {
     return NextResponse.json({ error: 'Post not found.' }, { status: 404 });

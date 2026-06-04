@@ -10,7 +10,7 @@ import {
 } from '@heroui/react';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { Mail, Video, List, LogOut, User, Film, Music, FileAudio, Columns3 } from 'lucide-react';
+import { LogOut, User, Columns3 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,61 +37,12 @@ export default function AdminHeader() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/admin" className="text-xl font-bold text-neutral-900">
+          <Link href="/admin/content-os" className="text-xl font-bold text-neutral-900">
             grateful today <span className="text-xs text-neutral-500 ml-2">admin</span>
           </Link>
 
           {/* Admin Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/admin/newsletter/list"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <List className="w-4 h-4" />
-              Newsletters
-            </Link>
-            <Link
-              href="/admin/newsletter/generate"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <Mail className="w-4 h-4" />
-              Generate
-            </Link>
-            <Link
-              href="/admin/youtube/generate"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <Video className="w-4 h-4" />
-              YouTube Generator
-            </Link>
-            <Link
-              href="/admin/youtube/scripts"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <List className="w-4 h-4" />
-              Scripts
-            </Link>
-            <Link
-              href="/admin/audio/generate"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <Music className="w-4 h-4" />
-              Audio
-            </Link>
-            <Link
-              href="/admin/audio/transcribe"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <FileAudio className="w-4 h-4" />
-              Transcribe
-            </Link>
-            <Link
-              href="/admin/video-editor"
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
-            >
-              <Film className="w-4 h-4" />
-              Video Editor
-            </Link>
             <Link
               href="/admin/content-os"
               className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"

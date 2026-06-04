@@ -43,6 +43,8 @@ function normalizePost(raw: admin.firestore.DocumentData, id: string): ContentOs
     notes: raw.notes || '',
     background: raw.background || '',
     music: raw.music || '',
+    renderUrl: raw.renderUrl || undefined,
+    renderedAt: raw.renderedAt || undefined,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
@@ -125,6 +127,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (payload.tags !== undefined) {
       updateData.tags = (payload.tags || []).map((tag) => tag.trim()).filter(Boolean);
+    }
+
+    // renderUrl / renderedAt may be written directly by the client-side render path.
+    const body = payload as Record<string, unknown>;
+    if (typeof body.renderUrl === 'string' && body.renderUrl.trim()) {
+      updateData.renderUrl = body.renderUrl.trim();
+      updateData.renderedAt = new Date().toISOString();
     }
 
     await docRef.update(updateData);

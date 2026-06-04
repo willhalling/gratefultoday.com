@@ -6,6 +6,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: [
+    '@remotion/bundler',
+    '@remotion/renderer',
+    '@rspack/core',
+    '@rspack/binding',
+    'esbuild',
+  ],
   // Keep config minimal like slowedgenerator; rely on workspace resolution
   images: {
     remotePatterns: [

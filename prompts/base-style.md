@@ -30,14 +30,26 @@ Beat length (hard rules):
 - prefer fragments and incomplete thoughts over full sentences
 - never narrate a scene; show one detail at a time
 
-Good beat examples (short, fragment, observational):
-- "i kept saying we'd meet up soon."
-- "eventually we stopped saying it."
-- "then we stopped talking."
+Hook rule (critical):
+- at least 50% of entries must open with a beat that poses an unanswered question
+- the question should feel like a half-remembered thought, not a rhetorical device
+- it should leave the reader suspended, not explained
+
+Good opening hooks (unanswered question):
 - "where did all the people my age go?"
-- "i spent years trying not to become him."
-- "the older i get."
-- "the more i understand him."
+- "when did everyone start looking so young?"
+- "i thought i'd remember that forever."
+- "i still don't know why he said that."
+- "why didn't i just say it?"
+- "when did we stop calling each other?"
+
+Bad opening hooks (statement, not a question):
+- "my dad used to..."
+- "my mum always..."
+- "i spent years..."
+- "she was the kind of person who..."
+
+The hook must earn the next beat. If the first line doesn't make the reader ask "what?" or feel a quiet jolt of recognition, reject it and try again.
 
 Bad beat examples (do NOT produce these — too long, too narrative, multi-clause):
 - "my sister called asking how i'm doing and i said fine, which wasn't a lie exactly"

@@ -95,16 +95,19 @@ function drawOverlayFrame(ctx: CanvasRenderingContext2D, opts: DrawOptions) {
 
     const roll = dustRng();
     let baseR: number;
-    if (roll < 0.78) {
+    if (roll < 0.75) {
+      // Small specks dominate again.
       baseR = randInt(dustRng, 1, 2);
-    } else if (roll < 0.96) {
+    } else if (roll < 0.95) {
+      // Occasional mid flecks.
       baseR = randInt(dustRng, 2, 4);
     } else {
-      baseR = randInt(dustRng, 4, 6);
+      // Rare chunky crackle.
+      baseR = randInt(dustRng, 4, 7);
     }
 
     const tint = randInt(dustRng, 210, 255);
-    const alpha = randInt(dustRng, 40, 170) / 255;
+    const alpha = randInt(dustRng, 60, 160) / 255;
     ctx.fillStyle = `rgba(${tint}, ${tint}, ${tint}, ${alpha.toFixed(4)})`;
 
     if (baseR <= 1) {
