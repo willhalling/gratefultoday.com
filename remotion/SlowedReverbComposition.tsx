@@ -28,10 +28,24 @@ import { CaptionRenderer } from './components/CaptionRenderer';
 import { ImageSlideshow } from '../components/video-editor/slideshow/ImageSlideshow';
 import type { SlideshowSettings } from '../types/slideshow';
 
-// Prefetch overlay videos for better performance
+// Prefetch optional overlay videos, but tolerate missing local assets so
+// Remotion Studio can still boot on machines that do not have them checked in.
 const overlayFiles = OVERLAY_OPTIONS.filter((o) => o.file !== null).map((o) => staticFile(o.file!));
 if (typeof window !== 'undefined') {
-  overlayFiles.forEach((file) => prefetch(file));
+  overlayFiles.forEach((file) => {
+    void fetch(file, { method: 'HEAD' })
+      .then((response) => {
+        if (!response.ok) {
+          return;
+        }
+
+        const prefetched = prefetch(file);
+        if (prefetched && typeof prefetched === 'object' && 'waitUntilDone' in prefetched) {
+          void prefetched.waitUntilDone().catch(() => undefined);
+        }
+      })
+      .catch(() => undefined);
+  });
 }
 
 interface SlowedReverbCompositionProps {

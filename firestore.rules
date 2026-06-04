@@ -61,6 +61,11 @@ service cloud.firestore {
     match /youtubeScripts/{scriptId} {
       allow read, write: if request.auth != null;
     }
+
+    // Content OS posts - admin tooling
+    match /contentOsPosts/{postId} {
+      allow read, write: if request.auth != null;
+    }
     
     // Newsletter collection - admin/server can write, anyone can read
     match /newsletter/{dayId} {

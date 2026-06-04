@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { Mail, Settings, Users, Video, List, Film, Music, FileAudio, FileText } from 'lucide-react';
+import { Mail, Settings, Users, Video, List, Film, Music, FileAudio, FileText, Columns3 } from 'lucide-react';
 import Link from 'next/link';
 import AdminGuard from '@/components/AdminGuard';
 
@@ -62,6 +62,14 @@ export default function AdminPage() {
       href: '/admin/invoice',
       color: 'text-teal-600',
       bgColor: 'bg-teal-50',
+    },
+    {
+      title: 'Content OS',
+      description: 'Generate, curate, edit, and export short-form post content',
+      icon: Columns3,
+      href: '/admin/content-os',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
     },
     {
       title: 'User Management',

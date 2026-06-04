@@ -1,9 +1,18 @@
 import React from 'react';
-import { Composition } from 'remotion';
-import { SlowedReverbComposition } from './SlowedReverbComposition';
+import { Composition, staticFile } from 'remotion';
 import { WeekJourneyComposition } from './WeekJourneyComposition';
 import { MilestoneComposition } from './MilestoneComposition';
+import { GratitudePost } from './gratitude/GratitudePost';
+import { computeDurationInFrames, FPS, VIDEO_H, VIDEO_W } from './gratitude/constants';
 import type { DayResponse } from '../types/just-for-a-week';
+
+const gratitudePostSample = {
+  beats: [
+    "my sister called asking how i'm doing and i said fine, which wasn't a lie exactly",
+    "she said she's been worried about me since dad's thing and i almost told her about the sleepless nights",
+    'instead i asked about her garden and we talked about tomatoes for twenty minutes',
+  ],
+};
 
 // Mock data for testing Week Journey
 const mockResponses: DayResponse[] = [
@@ -55,6 +64,21 @@ export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
+        id="GratitudePost"
+        component={GratitudePost}
+        durationInFrames={computeDurationInFrames(gratitudePostSample.beats)}
+        fps={FPS}
+        width={VIDEO_W}
+        height={VIDEO_H}
+        defaultProps={{
+          beats: gratitudePostSample.beats,
+          background: {
+            url: staticFile('video-test.mp4'),
+            kind: 'video' as const,
+          },
+        }}
+      />
+      <Composition
         id="WeekJourney"
         component={WeekJourneyComposition}
         durationInFrames={2400} // 80 seconds at 30fps
@@ -64,18 +88,6 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           responses: mockResponses,
           userEmail: 'test@example.com',
-        }}
-      />
-      <Composition
-        id="SlowedReverb"
-        component={SlowedReverbComposition}
-        durationInFrames={300}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          imageUrl: 'https://via.placeholder.com/500',
-          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
         }}
       />
       <Composition

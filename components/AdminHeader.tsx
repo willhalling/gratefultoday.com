@@ -10,7 +10,7 @@ import {
 } from '@heroui/react';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { Mail, Video, List, LogOut, User, Film, Music, FileAudio } from 'lucide-react';
+import { Mail, Video, List, LogOut, User, Film, Music, FileAudio, Columns3 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -91,6 +91,13 @@ export default function AdminHeader() {
             >
               <Film className="w-4 h-4" />
               Video Editor
+            </Link>
+            <Link
+              href="/admin/content-os"
+              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition"
+            >
+              <Columns3 className="w-4 h-4" />
+              Content OS
             </Link>
           </nav>
 
