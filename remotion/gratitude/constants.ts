@@ -67,13 +67,15 @@ export type FontChoice =
 
 export interface GratitudePostProps {
   beats: string[];
-  background?: {
-    url: string;
-    kind: 'image' | 'video';
-  };
-  music?: {
-    url: string;
-  };
+  /** Legacy single background — used when backgrounds[] is not provided. */
+  background?: { url: string; kind: 'image' | 'video' };
+  /**
+   * Per-beat backgrounds. Index 0 = beat 1, 1 = beat 2, 2 = beat 3.
+   * Each entry can be null/undefined to inherit from the previous beat.
+   * Takes precedence over the legacy `background` field.
+   */
+  backgrounds?: Array<{ url: string; kind: 'image' | 'video' } | null>;
+  music?: { url: string };
   fontChoice?: FontChoice;
   headlineWord?: string;
 }

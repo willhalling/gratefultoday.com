@@ -120,7 +120,7 @@ async function buildSystemPrompt(plan: DiversityPlanItem[]): Promise<string> {
     })
   );
 
-  const outputContract = `Output contract:\n- Return ONLY valid JSON\n- Top-level key: "entries"\n- entries must be an array of objects\n- each object: { lane, theme, beats, tags, headlineWord }\n- beats should usually be 3 lines, sometimes 2 or 4\n- tags should be lowercase hashtags\n- headlineWord: exactly 1 lowercase word that creates curiosity and emotional tension without spoiling the ending. Prefer ambiguous emotional words. Avoid obvious nouns, adjectives that are too literal, or hashtag-style words. This word will be shown as a large hook on the first screen before the beats play.`;
+  const outputContract = `Output contract:\n- Return ONLY valid JSON\n- Top-level key: "entries"\n- entries must be an array of objects\n- each object: { lane, theme, beats, tags, headlineWord }\n- beats should usually be 3 lines, sometimes 2 or 4\n- tags should be lowercase hashtags\n- headlineWord: a short phrase (1–5 words, all lowercase) that acts as "beat 0" — the first thing the viewer sees before the beats begin. It must create curiosity, recognition, or emotional tension that makes the viewer want to read beat 1. It should feel like a half-formed thought or quiet moment of realisation, not a category label or topic noun. Good examples: "i blinked", "still meaning to", "when did that happen?", "i wasn't ready", "not yet", "soon", "eventually", "wait a minute", "i didn't notice", "that's the strange part". Bad examples: "mortality", "identity", "friendship", "gratitude", "wasting", "regret", "philosophy". The headline must connect directly to beat 1 and give the viewer a reason to continue reading.`;
 
   return [baseStyle, ...lanePrompts, negativeRules, outputContract].join('\n\n---\n\n');
 }
@@ -299,6 +299,16 @@ function evaluateQuality(entry: GeneratedEntry): QualityResult {
     return { ok: false, reason: 'resolved moral arc' };
   }
 
+  // Reject headline if it is a bare category/topic label with no narrative tension.
+  if (entry.headlineWord && !entry.headlineWord.includes(' ')) {
+    const labelWord = entry.headlineWord.toLowerCase().replace(/[^a-z]/g, '');
+    const categoryFlat = (CONTENT_OS_CATEGORIES as readonly string[]).map((c) => c.replace(/_/g, ''));
+    const topicList = (CONTENT_OS_TOPICS as readonly string[]);
+    if (categoryFlat.includes(labelWord) || topicList.includes(labelWord as ContentOsTopic)) {
+      return { ok: false, reason: 'headline is a category/topic label — needs a narrative hook phrase' };
+    }
+  }
+
   return { ok: true };
 }
 
@@ -364,9 +374,12 @@ function normalizeCandidate(
     tags.unshift(laneTag);
   }
 
-  // Validate/normalise headlineWord: must be a single lowercase word.
-  const rawWord = (raw.headlineWord || '').trim().toLowerCase().replace(/[^a-z'.]/g, '');
-  const headlineWord = rawWord.includes(' ') ? rawWord.split(' ')[0] : rawWord;
+  // Validate/normalise headlineWord: 1–5 word beat-0 phrase.
+  const rawHeadline = (raw.headlineWord || '').trim().toLowerCase()
+    .replace(/[^a-z' .!?,]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const headlineWord = rawHeadline.split(' ').filter(Boolean).slice(0, 5).join(' ');
 
   const entry: GeneratedEntry = {
     lane,

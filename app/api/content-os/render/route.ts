@@ -38,9 +38,17 @@ function postToInputProps(post: ContentOsPost): GratitudePostProps {
     props.headlineWord = post.headlineWord.trim();
   }
 
-  if (post.background) {
-    const url = post.background.trim();
-    props.background = { url, kind: backgroundKind(url) };
+  // Build per-beat backgrounds array. background1 falls back to legacy background field.
+  const bgUrls = [
+    (post.background1 || post.background || '').trim(),
+    (post.background2 || '').trim(),
+    (post.background3 || '').trim(),
+  ];
+  const backgrounds = bgUrls.map((url) =>
+    url ? { url, kind: backgroundKind(url) } as { url: string; kind: 'image' | 'video' } : null
+  );
+  if (backgrounds.some(Boolean)) {
+    props.backgrounds = backgrounds;
   }
 
   if (post.music) {

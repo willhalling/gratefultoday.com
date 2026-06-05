@@ -67,6 +67,17 @@ Goal:
 - the goal is recognition, not teaching
 - the reader should feel "i've thought that before" — not "someone is giving me advice"
 
+Headline (headlineWord) rules:
+- the headline is "beat 0" — the first thing the viewer sees before the beats begin
+- it must create curiosity, tension, or recognition that makes the viewer want to read beat 1
+- it must feel like a half-formed thought, not a topic or category label
+- length: 1–5 words preferred
+- tone: like something a real person might quietly think on a train
+- it must connect directly to beat 1 — do not write a headline that could fit any post
+- good examples: "i blinked", "still meaning to", "when did that happen?", "i wasn't ready", "not yet", "soon", "eventually", "wait a minute", "i didn't notice", "that's the strange part", "i keep forgetting"
+- bad examples: "mortality", "identity", "friendship", "gratitude", "wasting", "regret", "philosophy", "belonging", "hope"
+- avoid motivational language, inspirational framing, or obvious engagement bait
+
 Validation (apply before returning any post):
 1. does beat 1 create curiosity?
 2. does beat 2 move the thought forward?

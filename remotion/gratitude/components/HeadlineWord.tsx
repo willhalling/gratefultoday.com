@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 import { InkBleed } from '../lyric/InkBleed';
 import { FilmOverlayLayer } from './FilmOverlayLayer';
+import { BackgroundLayer } from './BackgroundLayer';
 import {
   BEAT_FONTSIZE,
   BEAT_LENGTH_S,
@@ -44,9 +45,10 @@ const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 interface HeadlineWordProps {
   word: string;
   fontChoice: FontChoice;
+  background?: { url: string; kind: 'image' | 'video' };
 }
 
-export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice: _fontChoice }) => {
+export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice: _fontChoice, background }) => {
   const frame = useCurrentFrame();
   const fontFamily = FONT_FAMILY_MAP.dm_serif;
 
@@ -61,17 +63,33 @@ export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice: _f
 
   return (
     <AbsoluteFill>
-      {/* Full-screen backdrop: blurs the video and darkens it. Both animate away as text reveals. */}
+      {/*
+       * Blurred background copy — filter is applied directly on the <Img>/<Video>
+       * element via BackgroundLayer's mediaStyle prop. The Remotion client-side
+       * renderer supports filter on media elements directly; wrapper-div filters
+       * are not reliably composed to child media in the canvas renderer.
+       */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          backdropFilter: `blur(${blurPx}px)`,
-          WebkitBackdropFilter: `blur(${blurPx}px)`,
-          backgroundColor: `rgba(0,0,0,${overlayOpacity})`,
+          overflow: 'hidden',
           opacity: backdropExitOpacity,
         }}
-      />
+      >
+        <BackgroundLayer
+          background={background}
+          mediaStyle={{ filter: `blur(${blurPx}px)` }}
+        />
+        {/* Dark overlay that fades as the blur clears */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: `rgba(0,0,0,${overlayOpacity})`,
+          }}
+        />
+      </div>
       {/* Ensure grain is visible over the blur on frame 0 during headline intro. */}
       <FilmOverlayLayer seed={13} opacity={0.95 * backdropExitOpacity} />
       <div

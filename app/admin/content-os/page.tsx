@@ -207,7 +207,7 @@ export default function ContentOsPage() {
   // --- media picker ---
   const [mediaPicker, setMediaPicker] = useState<{
     open: boolean;
-    target: 'background' | 'music' | null;
+    target: 'background1' | 'background2' | 'background3' | 'music' | null;
   }>({ open: false, target: null });
 
   // ---------------------------------------------------------------------------
@@ -317,7 +317,9 @@ export default function ContentOsPage() {
           status: editingPost.status,
           score: Number(editingPost.score || 0),
           notes: editingPost.notes,
-          background: editingPost.background,
+          background1: editingPost.background1 || '',
+          background2: editingPost.background2 || '',
+          background3: editingPost.background3 || '',
           music: editingPost.music,
           headlineWord: editingPost.headlineWord || '',
         }),
@@ -357,15 +359,20 @@ export default function ContentOsPage() {
     const beats = postBeats(post);
     const props: {
       beats: string[];
-      background?: { url: string; kind: 'image' | 'video' };
+      backgrounds?: Array<{ url: string; kind: 'image' | 'video' } | null>;
       music?: { url: string };
       headlineWord?: string;
     } = { beats };
     if (post.headlineWord?.trim()) props.headlineWord = post.headlineWord.trim();
-    if (post.background?.trim()) {
-      const url = post.background.trim();
-      props.background = { url, kind: backgroundKind(url) };
-    }
+    const bgUrls = [
+      (post.background1 || post.background || '').trim(),
+      (post.background2 || '').trim(),
+      (post.background3 || '').trim(),
+    ];
+    const backgrounds = bgUrls.map((url) =>
+      url ? ({ url, kind: backgroundKind(url) } as { url: string; kind: 'image' | 'video' }) : null
+    );
+    if (backgrounds.some(Boolean)) props.backgrounds = backgrounds;
     if (post.music?.trim()) props.music = { url: post.music.trim() };
     return props;
   }
@@ -1220,12 +1227,28 @@ export default function ContentOsPage() {
                       <Textarea size="sm" label="Beat 3" minRows={2} value={editingPost.beat3 || ''} onValueChange={(v) => setEditingPost({ ...editingPost, beat3: v })} className="md:col-span-2" />
                       <Textarea size="sm" label="Beat 4" minRows={2} value={editingPost.beat4 || ''} onValueChange={(v) => setEditingPost({ ...editingPost, beat4: v })} className="md:col-span-2" />
 
-                      {/* Media */}
-                      <div className="flex gap-2 md:col-span-2">
-                        <Input size="sm" label="Background URL" value={editingPost.background || ''} onValueChange={(v) => setEditingPost({ ...editingPost, background: v })} className="flex-1" />
-                        <Button size="sm" variant="flat" className="shrink-0 self-end" onPress={() => setMediaPicker({ open: true, target: 'background' })}>
-                          Choose…
-                        </Button>
+                      {/* Per-beat backgrounds */}
+                      <div className="md:col-span-2 space-y-2">
+                        <p className="text-xs font-medium text-default-500">Backgrounds</p>
+                        {(['background1', 'background2', 'background3'] as const).map((key, i) => (
+                          <div key={key} className="flex gap-2">
+                            <Input
+                              size="sm"
+                              label={`Beat ${i + 1} background`}
+                              value={editingPost[key] || ''}
+                              onValueChange={(v) => setEditingPost((p) => p ? { ...p, [key]: v } : p)}
+                              className="flex-1"
+                            />
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              className="shrink-0 self-end"
+                              onPress={() => setMediaPicker({ open: true, target: key })}
+                            >
+                              Choose…
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex gap-2 md:col-span-2">
                         <Input size="sm" label="Music URL" value={editingPost.music || ''} onValueChange={(v) => setEditingPost({ ...editingPost, music: v })} className="flex-1" />
@@ -1373,26 +1396,21 @@ export default function ContentOsPage() {
           <MediaManagerModal
             isOpen={mediaPicker.open}
             onClose={() => setMediaPicker({ open: false, target: null })}
-            title={mediaPicker.target === 'music' ? 'Choose music' : 'Choose background'}
-            mediaType={
-              mediaPicker.target === 'music'
-                ? ('audio' as MediaType)
-                : mediaPicker.target === 'background'
-                  ? undefined
-                  : undefined
+            title={
+              mediaPicker.target === 'music' ? 'Choose music'
+              : mediaPicker.target === 'background1' ? 'Choose background – Beat 1'
+              : mediaPicker.target === 'background2' ? 'Choose background – Beat 2'
+              : mediaPicker.target === 'background3' ? 'Choose background – Beat 3'
+              : 'Choose background'
             }
+            mediaType={mediaPicker.target === 'music' ? ('audio' as MediaType) : undefined}
             onSelectMedia={(item: MediaItem) => {
               if (!editingPost || !mediaPicker.target) return;
-              if (mediaPicker.target === 'background') {
-                setEditingPost((current) => {
-                  if (!current) return current;
-                  return { ...current, background: item.url };
-                });
+              const target = mediaPicker.target;
+              if (target === 'music') {
+                setEditingPost((current) => current ? { ...current, music: item.url } : current);
               } else {
-                setEditingPost((current) => {
-                  if (!current) return current;
-                  return { ...current, music: item.url };
-                });
+                setEditingPost((current) => current ? { ...current, [target]: item.url } : current);
               }
               setMediaPicker({ open: false, target: null });
             }}

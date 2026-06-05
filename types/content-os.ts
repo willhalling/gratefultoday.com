@@ -70,7 +70,10 @@ export interface ContentOsPost {
   notes?: string;
   renderUrl?: string;
   renderedAt?: string;
-  background?: string;
+  background?: string;  // legacy single-background field (kept for backward compat)
+  background1?: string;
+  background2?: string;
+  background3?: string;
   music?: string;
   headlineWord?: string;
   createdAt: string;

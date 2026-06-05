@@ -42,6 +42,9 @@ function normalizePost(raw: admin.firestore.DocumentData, id: string): ContentOs
     score: Number(raw.score || 0),
     notes: raw.notes || '',
     background: raw.background || '',
+    background1: raw.background1 || raw.background || '',
+    background2: raw.background2 || '',
+    background3: raw.background3 || '',
     music: raw.music || '',
     renderUrl: raw.renderUrl || undefined,
     renderedAt: raw.renderedAt || undefined,
@@ -112,6 +115,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       'score',
       'notes',
       'background',
+      'background1',
+      'background2',
+      'background3',
       'music',
     ];
 

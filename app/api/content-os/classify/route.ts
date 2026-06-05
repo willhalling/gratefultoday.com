@@ -12,11 +12,13 @@ interface ClassifyRequest {
 }
 
 function normalizeHeadlineWord(value: string): string {
-  return value
+  const cleaned = value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z'.]/g, '')
-    .split(/\s+/)[0] || '';
+    .replace(/[^a-z' .!?,]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.split(' ').filter(Boolean).slice(0, 5).join(' ') || '';
 }
 
 function normalizeTag(value: string): string {
@@ -26,19 +28,19 @@ function normalizeTag(value: string): string {
 }
 
 function fallbackHeadlineWord(beats: string[]): string {
-  const stop = new Set([
-    'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'about', 'when',
-    'what', 'where', 'why', 'how', 'then', 'than', 'have', 'just', 'like', 'your',
-    'you', 'they', 'them', 'their', 'there', 'here', 'been', 'were', 'will', 'would',
-    'could', 'should', 'after', 'before', 'over', 'under', 'still', 'now', 'today',
-    'these', 'those', 'mostly', 'already', 'arrived', 'used', 'count',
-  ]);
-  const words = beats
-    .join(' ')
-    .toLowerCase()
-    .match(/[a-z']+/g) || [];
-  const candidate = words.find((w) => w.length >= 4 && !stop.has(w));
-  return normalizeHeadlineWord(candidate || words[0] || 'quiet');
+  // Return a curated narrative phrase rather than a topic-label word.
+  const NARRATIVE_FALLBACKS = [
+    "i blinked",
+    "not yet",
+    "still meaning to",
+    "wait a minute",
+    "eventually",
+    "i wasn't ready",
+    "soon",
+    "that's the strange part",
+  ];
+  const idx = beats.join('').length % NARRATIVE_FALLBACKS.length;
+  return NARRATIVE_FALLBACKS[idx];
 }
 
 function isCategory(value: string): value is ContentOsCategory {
@@ -112,8 +114,8 @@ export async function POST(request: NextRequest) {
       'You classify short reflective beats into taxonomy values.',
       `Allowed categories: ${CONTENT_OS_CATEGORIES.join(', ')}`,
       `Allowed topics: ${CONTENT_OS_TOPICS.join(', ')}`,
-      'Also create a headline hook word.',
-      'headlineWord rules: exactly one lowercase word, emotional/ambiguous, not literal, no hashtags.',
+      'Also create a headline that acts as "beat 0" — the first thing the viewer sees before the beats begin.',
+      'headlineWord rules: 1–5 lowercase words, creates curiosity/tension/recognition for beat 1, feels like a half-formed thought NOT a category label. Good: "i blinked", "still meaning to", "not yet", "when did that happen?", "i wasn\'t ready". Bad: "mortality", "gratitude", "identity", "regret".',
       'Also create a post description (1 short sentence) and 3-6 tags.',
       'Tag rules: lowercase, hashtag format.',
       'Return valid JSON only: {"category":"...","mainTopic":"...","secondaryTopic":"...","headlineWord":"...","description":"...","tags":["#...","#..."]}',
