@@ -850,6 +850,28 @@ export default function ContentOsPage() {
                           <span>score {post.score}</span>
                           {post.renderUrl && <span className="text-success-500">· rendered</span>}
                         </div>
+                        <div className="mt-2 flex gap-2 md:hidden" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="primary"
+                            onPress={() => openEdit(post)}
+                          >
+                            Edit
+                          </Button>
+                          {post.renderUrl && (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              color="success"
+                              onPress={() => {
+                                window.location.href = `/shared/${post.id}`;
+                              }}
+                            >
+                              Shared
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardBody>

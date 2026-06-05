@@ -1,6 +1,7 @@
 'use client';
 
 import { HeroUIProvider } from '@heroui/react';
+import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import { ReactNode } from 'react';
 
@@ -22,6 +23,9 @@ export function HeroUIThemeProvider({ children }: HeroUIThemeProviderProps) {
 
 export function Crisp({ id }: CrispProps) {
   if (!id) return null;
+
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) return null;
 
   const script = `
     window.$crisp = [];
