@@ -15,8 +15,23 @@ export function isVideoUrl(rawUrl: string): boolean {
   // Strip query string / fragment so the extension test isn't defeated by
   // signed-URL parameters.
   const noQuery = url.split('?')[0].split('#')[0];
+  // Firebase download URLs often encode folder separators as %2F.
+  // Use decoded path checks as a strong signal when extensions are absent.
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(noQuery);
+    } catch {
+      return noQuery;
+    }
+  })();
+  if (/\/media-library\/videos\//i.test(decoded) || /%2Fvideos%2F/i.test(noQuery)) {
+    return true;
+  }
+  if (/\/media-library\/images\//i.test(decoded) || /%2Fimages%2F/i.test(noQuery)) {
+    return false;
+  }
   // Also strip any trailing path segment after the extension (defensive).
-  return VIDEO_EXT_RE.test(noQuery);
+  return VIDEO_EXT_RE.test(noQuery) || VIDEO_EXT_RE.test(decoded);
 }
 
 export function backgroundKind(rawUrl: string): 'video' | 'image' {

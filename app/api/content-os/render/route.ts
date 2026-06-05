@@ -99,18 +99,17 @@ export async function POST(request: NextRequest) {
     });
 
     const bucket = storage.bucket('grateful-today-761f2.appspot.com');
-    const destination = `content-os-renders/${post.id}/${Date.now()}.mp4`;
+    const destination = `content-os-renders/${post.id}/latest.mp4`;
     await bucket.upload(tmpFile, {
       destination,
       contentType: 'video/mp4',
-      metadata: { cacheControl: 'public, max-age=3600' },
+      metadata: { cacheControl: 'public, max-age=0, must-revalidate' },
     });
 
     const file = bucket.file(destination);
     await file.makePublic();
-    const renderUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
-
     const renderedAt = new Date().toISOString();
+    const renderUrl = `https://storage.googleapis.com/${bucket.name}/${destination}?v=${encodeURIComponent(renderedAt)}`;
     await postRef.update({
       status: 'rendered',
       renderUrl,

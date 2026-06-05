@@ -46,8 +46,9 @@ interface HeadlineWordProps {
   fontChoice: FontChoice;
 }
 
-export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice }) => {
+export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice: _fontChoice }) => {
   const frame = useCurrentFrame();
+  const fontFamily = FONT_FAMILY_MAP.dm_serif;
 
   // Only active during the first beat slot.
   if (frame >= BEAT_FRAMES) return null;
@@ -91,7 +92,7 @@ export const HeadlineWord: React.FC<HeadlineWordProps> = ({ word, fontChoice }) 
           fontSize={HEADLINE_FONT_SIZE}
           color="#ffffff"
           accentColor="#c8a96e"
-          fontFamily={FONT_FAMILY_MAP[fontChoice]}
+          fontFamily={fontFamily}
         />
       </div>
     </AbsoluteFill>

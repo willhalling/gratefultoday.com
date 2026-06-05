@@ -46,12 +46,12 @@ export async function POST(request: NextRequest) {
 
     await fileRef.save(videoBuffer, {
       contentType: 'video/mp4',
-      metadata: { cacheControl: 'public, max-age=3600' },
+      metadata: { cacheControl: 'public, max-age=0, must-revalidate' },
     });
     await fileRef.makePublic();
 
-    const renderUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
     const renderedAt = new Date().toISOString();
+    const renderUrl = `https://storage.googleapis.com/${bucket.name}/${destination}?v=${encodeURIComponent(renderedAt)}`;
 
     await postRef.update({
       status: 'rendered',

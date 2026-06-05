@@ -92,6 +92,10 @@ interface RenderState {
   message: string;
 }
 
+interface QuickAddFormState {
+  beatsText: string;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -152,6 +156,11 @@ const STATUS_COLOR: Record<string, 'default' | 'success' | 'warning' | 'danger' 
 
 export default function ContentOsPage() {
   const { isOpen, onOpen, onClose: modalClose } = useDisclosure();
+  const {
+    isOpen: isQuickAddOpen,
+    onOpen: onQuickAddOpen,
+    onClose: onQuickAddClose,
+  } = useDisclosure();
 
   // --- core data ---
   const [posts, setPosts] = useState<ContentOsPost[]>([]);
@@ -182,6 +191,12 @@ export default function ContentOsPage() {
   const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedDraft[]>([]);
   const [copiedBeatsPostId, setCopiedBeatsPostId] = useState<string | null>(null);
   const [copiedDraftId, setCopiedDraftId] = useState<string | null>(null);
+
+  // --- quick add ---
+  const [creatingPost, setCreatingPost] = useState(false);
+  const [quickAddForm, setQuickAddForm] = useState<QuickAddFormState>({
+    beatsText: '',
+  });
 
   // --- render / preview ---
   const [renderState, setRenderState] = useState<RenderState>({
@@ -347,8 +362,11 @@ export default function ContentOsPage() {
       headlineWord?: string;
     } = { beats };
     if (post.headlineWord?.trim()) props.headlineWord = post.headlineWord.trim();
-    if (post.background) props.background = { url: post.background, kind: backgroundKind(post.background) };
-    if (post.music) props.music = { url: post.music };
+    if (post.background?.trim()) {
+      const url = post.background.trim();
+      props.background = { url, kind: backgroundKind(url) };
+    }
+    if (post.music?.trim()) props.music = { url: post.music.trim() };
     return props;
   }
 
@@ -528,6 +546,90 @@ export default function ContentOsPage() {
     await loadPosts();
   }
 
+  async function quickAddPost() {
+    const beats = quickAddForm.beatsText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+    if (beats.length < 2) {
+      setError('Paste at least 2 lines (2-4 beats).');
+      return;
+    }
+
+    const fallbackName = beats[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 64) || `quick-post-${Date.now()}`;
+
+    setCreatingPost(true);
+    try {
+      let category: ContentOsCategory = CONTENT_OS_CATEGORIES[0];
+      let mainTopic: ContentOsTopic = CONTENT_OS_TOPICS[0];
+      let secondaryTopic: ContentOsTopic = CONTENT_OS_TOPICS[1];
+      let headlineWord = '';
+      let description = '';
+      let tags: string[] = [];
+
+      const classifyRes = await fetch('/api/content-os/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beats }),
+      });
+      if (classifyRes.ok) {
+        const classified = (await classifyRes.json()) as {
+          category?: ContentOsCategory;
+          mainTopic?: ContentOsTopic;
+          secondaryTopic?: ContentOsTopic;
+          headlineWord?: string;
+          description?: string;
+          tags?: string[];
+        };
+        if (classified.category) category = classified.category;
+        if (classified.mainTopic) mainTopic = classified.mainTopic;
+        if (classified.secondaryTopic) secondaryTopic = classified.secondaryTopic;
+        if (classified.headlineWord) headlineWord = classified.headlineWord;
+        if (classified.description) description = classified.description;
+        if (Array.isArray(classified.tags)) tags = classified.tags;
+      }
+
+      const res = await fetch('/api/content-os/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fallbackName,
+          category,
+          mainTopic,
+          secondaryTopic,
+          beat1: beats[0],
+          beat2: beats[1],
+          beat3: beats[2] || '',
+          beat4: beats[3] || '',
+          description,
+          tags,
+          status: 'generated',
+          score: 50,
+          headlineWord,
+        }),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        const details = Array.isArray(payload?.details) ? `: ${payload.details.join(', ')}` : '';
+        throw new Error((payload?.error || 'Failed to create post') + details);
+      }
+
+      setQuickAddForm((prev) => ({ ...prev, beatsText: '' }));
+      onQuickAddClose();
+      await loadPosts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create post');
+    } finally {
+      setCreatingPost(false);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
@@ -566,9 +668,14 @@ export default function ContentOsPage() {
           {/* ── Header ─────────────────────────────────────────────────────── */}
           <Card shadow="none" className="border border-divider">
             <CardHeader className="px-5 py-4">
-              <div>
+              <div className="flex w-full items-center justify-between gap-3">
+                <div>
                 <h1 className="text-2xl font-semibold">Content OS</h1>
                 <p className="mt-0.5 text-sm text-default-500">Generate, curate, edit, and render posts.</p>
+                </div>
+                <Button size="sm" color="primary" variant="flat" onPress={onQuickAddOpen}>
+                  Add post
+                </Button>
               </div>
             </CardHeader>
           </Card>
@@ -1239,6 +1346,29 @@ export default function ContentOsPage() {
             </ModalContent>
           </Modal>
 
+          <Modal isOpen={isQuickAddOpen} onClose={onQuickAddClose} placement="bottom-center" scrollBehavior="inside">
+            <ModalContent>
+              <>
+                <ModalHeader className="px-5 pb-3 pt-5">Add post</ModalHeader>
+                <ModalBody className="space-y-3 px-5 py-0">
+                  <p className="text-sm text-default-500">Paste beats as separate lines (2 to 4 lines). Category and topics are auto-assigned by AI.</p>
+                  <Textarea
+                    size="sm"
+                    label="Beats"
+                    placeholder={"i used to count down to friday.\nnow i'm mostly surprised\nit arrived already."}
+                    minRows={5}
+                    value={quickAddForm.beatsText}
+                    onValueChange={(v) => setQuickAddForm((p) => ({ ...p, beatsText: v }))}
+                  />
+                </ModalBody>
+                <ModalFooter className="px-5 py-4">
+                  <Button size="sm" variant="flat" color="danger" onPress={onQuickAddClose}>Cancel</Button>
+                  <Button size="sm" color="primary" isLoading={creatingPost} onPress={quickAddPost}>Create post</Button>
+                </ModalFooter>
+              </>
+            </ModalContent>
+          </Modal>
+
           {/* ── Media picker ──────────────────────────────────────────────── */}
           <MediaManagerModal
             isOpen={mediaPicker.open}
@@ -1254,9 +1384,15 @@ export default function ContentOsPage() {
             onSelectMedia={(item: MediaItem) => {
               if (!editingPost || !mediaPicker.target) return;
               if (mediaPicker.target === 'background') {
-                setEditingPost({ ...editingPost, background: item.url });
+                setEditingPost((current) => {
+                  if (!current) return current;
+                  return { ...current, background: item.url };
+                });
               } else {
-                setEditingPost({ ...editingPost, music: item.url });
+                setEditingPost((current) => {
+                  if (!current) return current;
+                  return { ...current, music: item.url };
+                });
               }
               setMediaPicker({ open: false, target: null });
             }}
