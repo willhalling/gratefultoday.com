@@ -23,6 +23,7 @@ interface GeneratedEntry {
   theme: ContentOsTopic;
   beats: string[];
   tags: string[];
+  headlineWord: string;
 }
 
 interface GeneratedPost {
@@ -33,6 +34,7 @@ interface GeneratedPost {
   beats: string[];
   description: string;
   tags: string[];
+  headlineWord: string;
 }
 
 interface DiversityPlanItem {
@@ -84,6 +86,18 @@ const QUALITY_REJECT_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
   { pattern: /^i (used to|always|would always|never)/i, reason: 'flat statement opener — needs a question or jolt' },
 ];
 
+// Patterns rejected when they appear at the start of the FINAL beat —
+// these turn the payoff into a status update rather than a realization.
+const FINAL_BEAT_UPDATE_TRAP_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
+  { pattern: /^now i\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^these days i\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^today i\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^currently i\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^nowadays i\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^so now\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+  { pattern: /^so these days\b/i, reason: 'final beat is an "update" — needs a realization, not a status' },
+];
+
 async function readPromptFile(relativePath: string): Promise<string> {
   const absolutePath = path.join(PROMPT_ROOT, relativePath);
   try {
@@ -106,7 +120,7 @@ async function buildSystemPrompt(plan: DiversityPlanItem[]): Promise<string> {
     })
   );
 
-  const outputContract = `Output contract:\n- Return ONLY valid JSON\n- Top-level key: "entries"\n- entries must be an array of objects\n- each object: { lane, theme, beats, tags }\n- beats should usually be 3 lines, sometimes 2 or 4\n- tags should be lowercase hashtags`;
+  const outputContract = `Output contract:\n- Return ONLY valid JSON\n- Top-level key: "entries"\n- entries must be an array of objects\n- each object: { lane, theme, beats, tags, headlineWord }\n- beats should usually be 3 lines, sometimes 2 or 4\n- tags should be lowercase hashtags\n- headlineWord: exactly 1 lowercase word that creates curiosity and emotional tension without spoiling the ending. Prefer ambiguous emotional words. Avoid obvious nouns, adjectives that are too literal, or hashtag-style words. This word will be shown as a large hook on the first screen before the beats play.`;
 
   return [baseStyle, ...lanePrompts, negativeRules, outputContract].join('\n\n---\n\n');
 }
@@ -259,6 +273,16 @@ function evaluateQuality(entry: GeneratedEntry): QualityResult {
     }
   }
 
+  // Final-beat "update trap": the last beat must be a realization, not a status update.
+  if (entry.beats.length >= 3) {
+    const finalBeat = (entry.beats[entry.beats.length - 1] ?? '').trim();
+    for (const rule of FINAL_BEAT_UPDATE_TRAP_PATTERNS) {
+      if (rule.pattern.test(finalBeat)) {
+        return { ok: false, reason: rule.reason };
+      }
+    }
+  }
+
   if (!hasFirstPerson(joined)) {
     return { ok: false, reason: 'missing first-person voice' };
   }
@@ -306,18 +330,20 @@ async function callAnthropic(systemPrompt: string, userPrompt: string) {
       theme?: string;
       beats?: string[];
       tags?: string[];
+      headlineWord?: string;
     }>;
     posts?: Array<{
       category?: string;
       mainTopic?: string;
       beats?: string[];
       tags?: string[];
+      headlineWord?: string;
     }>;
   };
 }
 
 function normalizeCandidate(
-  raw: { lane?: string; theme?: string; beats?: string[]; tags?: string[] },
+  raw: { lane?: string; theme?: string; beats?: string[]; tags?: string[]; headlineWord?: string },
   planned: DiversityPlanItem,
   fallback: { lane: ContentOsCategory; theme: ContentOsTopic }
 ): GeneratedEntry | null {
@@ -338,11 +364,16 @@ function normalizeCandidate(
     tags.unshift(laneTag);
   }
 
+  // Validate/normalise headlineWord: must be a single lowercase word.
+  const rawWord = (raw.headlineWord || '').trim().toLowerCase().replace(/[^a-z'.]/g, '');
+  const headlineWord = rawWord.includes(' ') ? rawWord.split(' ')[0] : rawWord;
+
   const entry: GeneratedEntry = {
     lane,
     theme,
     beats,
     tags: tags.slice(0, 7),
+    headlineWord,
   };
 
   const quality = evaluateQuality(entry);
@@ -403,12 +434,20 @@ export async function POST(request: NextRequest) {
           )}\n\nRules for diversity mode:\n- use each row's lane as the entry lane\n- use each row's theme as the entry theme\n- produce exactly ${remaining} entries matching this plan in order\n- avoid repeating near-identical scenarios across entries`
         : '';
 
+      const directionBlock = body.extraInstruction?.trim()
+        ? `CREATIVE DIRECTION (this is the primary brief — overrides lane and theme taxonomy below):
+${body.extraInstruction.trim()}
+
+All entries MUST be directly about this direction. Do not default to the lane/theme taxonomy.
+Generate concrete, specific moments that live inside this exact subject matter.
+Example: if the direction is "mornings, not wasting life" write about early alarms, the quiet before 6am, getting up when the house is still dark — not generic observations about time or gratitude.`
+        : '';
+
       const userPrompt = `Generate ${remaining} entries.
 
-lane: ${body.category}
+${directionBlock ? directionBlock + '\n\n' : ''}lane: ${body.category}
 theme: ${body.mainTopic}
 secondary context: ${body.secondaryTopic}
-${body.extraInstruction ? `extra instruction: ${body.extraInstruction}` : ''}
 ${diversityPrompt}
 
 Voice requirements:
@@ -453,6 +492,14 @@ Reject these patterns internally before finalizing output:
 - journey
 - growth
 
+Beat 3 quality (most common failure point — apply this check before returning):
+- the final beat must be a realization, not a status update
+- do NOT start the final beat with "now i...", "these days i...", "today i...", "currently i...", "nowadays i...", "so now...", "so these days..." — these turn the payoff into an update and will be rejected
+- the final beat must make the reader reinterpret beats 1 and 2
+- if the post would still work with the final beat removed, rewrite the final beat
+- good final beat examples: "i thought there'd always be another one.", "i'd love one of them back.", "maybe i'm paying attention.", "they're probably wondering the same thing."
+- bad final beat examples (update trap — never produce these): "now i set three alarms.", "these days i wake up early.", "today i value time differently."
+
 Return strictly valid json only.`;
 
       const parsed = await callAnthropic(systemPrompt, userPrompt);
@@ -462,6 +509,7 @@ Return strictly valid json only.`;
         theme: item.theme,
         beats: item.beats,
         tags: item.tags,
+        headlineWord: item.headlineWord,
       }));
 
       const fromLegacyPosts = (parsed.posts || []).map((item) => ({
@@ -469,6 +517,7 @@ Return strictly valid json only.`;
         theme: item.mainTopic,
         beats: item.beats,
         tags: item.tags,
+        headlineWord: item.headlineWord,
       }));
 
       const candidates = fromEntries.length > 0 ? fromEntries : fromLegacyPosts;
@@ -509,6 +558,7 @@ Return strictly valid json only.`;
         beats: entry.beats,
         description: entry.beats[2] || entry.beats[1] || '',
         tags: entry.tags,
+        headlineWord: entry.headlineWord,
       };
     });
 

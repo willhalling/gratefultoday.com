@@ -45,6 +45,7 @@ function normalizePost(raw: admin.firestore.DocumentData, id: string): ContentOs
     music: raw.music || '',
     renderUrl: raw.renderUrl || undefined,
     renderedAt: raw.renderedAt || undefined,
+    headlineWord: raw.headlineWord || undefined,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
@@ -134,6 +135,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (typeof body.renderUrl === 'string' && body.renderUrl.trim()) {
       updateData.renderUrl = body.renderUrl.trim();
       updateData.renderedAt = new Date().toISOString();
+    }
+    if (typeof body.headlineWord === 'string') {
+      updateData.headlineWord = body.headlineWord.trim().toLowerCase();
     }
 
     await docRef.update(updateData);

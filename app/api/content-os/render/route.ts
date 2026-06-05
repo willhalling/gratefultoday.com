@@ -34,6 +34,10 @@ function postToInputProps(post: ContentOsPost): GratitudePostProps {
 
   const props: GratitudePostProps = { beats };
 
+  if (post.headlineWord?.trim()) {
+    props.headlineWord = post.headlineWord.trim();
+  }
+
   if (post.background) {
     const url = post.background.trim();
     props.background = { url, kind: backgroundKind(url) };
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     await renderMedia({
       composition: {
         ...composition,
-        durationInFrames: computeDurationInFrames(inputProps.beats),
+        durationInFrames: computeDurationInFrames(inputProps.beats, inputProps.headlineWord),
       },
       serveUrl,
       codec: 'h264',

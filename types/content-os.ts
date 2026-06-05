@@ -72,6 +72,7 @@ export interface ContentOsPost {
   renderedAt?: string;
   background?: string;
   music?: string;
+  headlineWord?: string;
   createdAt: string;
   updatedAt: string;
 }

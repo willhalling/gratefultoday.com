@@ -30,7 +30,7 @@ export async function renderPostInBrowser({
   signal,
   frameRange,
 }: RenderPostInBrowserOptions): Promise<Blob> {
-  const durationInFrames = computeDurationInFrames(inputProps.beats);
+  const durationInFrames = computeDurationInFrames(inputProps.beats, inputProps.headlineWord);
 
   const result = await renderMediaOnWeb({
     composition: {

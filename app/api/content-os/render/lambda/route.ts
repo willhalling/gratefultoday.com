@@ -15,6 +15,7 @@ function postToInputProps(post: ContentOsPost): GratitudePostProps {
     .map((b) => (b ?? '').trim())
     .filter(Boolean);
   const props: GratitudePostProps = { beats };
+  if (post.headlineWord?.trim()) props.headlineWord = post.headlineWord.trim();
   if (post.background) {
     const url = post.background.trim();
     props.background = { url, kind: backgroundKind(url) };
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
       inputProps,
       codec: 'h264',
       privacy: 'public',
-      forceDurationInFrames: computeDurationInFrames(inputProps.beats),
+      forceDurationInFrames: computeDurationInFrames(inputProps.beats, inputProps.headlineWord),
       downloadBehavior: { type: 'play-in-browser' },
     });
 

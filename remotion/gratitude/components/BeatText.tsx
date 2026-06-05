@@ -139,9 +139,11 @@ const BeatBlock: React.FC<BeatBlockProps> = ({ beat, fontChoice, startFrame, end
 interface BeatTextProps {
   beats: string[];
   fontChoice: FontChoice;
+  /** Frame offset applied to all beats — used when a headline word precedes them. */
+  frameOffset?: number;
 }
 
-export const BeatText: React.FC<BeatTextProps> = ({ beats, fontChoice }) => {
+export const BeatText: React.FC<BeatTextProps> = ({ beats, fontChoice, frameOffset = 0 }) => {
   const beatFrames = Math.round(BEAT_LENGTH_S * FPS);
   const frame = useCurrentFrame();
   return (
@@ -149,7 +151,7 @@ export const BeatText: React.FC<BeatTextProps> = ({ beats, fontChoice }) => {
       {beats
         .filter((b) => b.trim())
         .map((beat, idx) => {
-          const startFrame = idx * beatFrames;
+          const startFrame = idx * beatFrames + frameOffset;
           const endFrame = startFrame + beatFrames;
           // Only mount around the active window to avoid measuring inactive beats.
           if (frame < startFrame - 1 || frame > endFrame + 1) return null;

@@ -69,6 +69,7 @@ function normalizePost(raw: admin.firestore.DocumentData, id: string): ContentOs
     music: raw.music || '',
     renderUrl: raw.renderUrl || undefined,
     renderedAt: raw.renderedAt || undefined,
+    headlineWord: raw.headlineWord || undefined,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
       notes: payload.notes?.trim() || '',
       background: payload.background?.trim() || '',
       music: payload.music?.trim() || '',
+      headlineWord: (payload as Record<string, unknown>).headlineWord || '',
       createdAt: now,
       updatedAt: now,
     });

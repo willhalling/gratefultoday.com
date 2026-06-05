@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import {
   FILM_DUST_PER_FRAME,
@@ -137,9 +137,11 @@ interface FilmOverlayLayerProps {
    * deterministic.
    */
   seed?: number;
+  /** Optional visual strength multiplier for this overlay instance. */
+  opacity?: number;
 }
 
-export const FilmOverlayLayer: React.FC<FilmOverlayLayerProps> = ({ seed = 1 }) => {
+export const FilmOverlayLayer: React.FC<FilmOverlayLayerProps> = ({ seed = 1, opacity = 1 }) => {
   const frame = useCurrentFrame();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -148,7 +150,7 @@ export const FilmOverlayLayer: React.FC<FilmOverlayLayerProps> = ({ seed = 1 }) 
   const framesPerOverlay = Math.max(1, Math.round(FPS / FILM_OVERLAY_FPS));
   const overlayFrameIndex = Math.floor(frame / framesPerOverlay);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -166,6 +168,7 @@ export const FilmOverlayLayer: React.FC<FilmOverlayLayerProps> = ({ seed = 1 }) 
           width: '100%',
           height: '100%',
           display: 'block',
+          opacity,
           // Screen blend so the bright dust/streaks add light over the
           // background without darkening it.
           mixBlendMode: 'screen',

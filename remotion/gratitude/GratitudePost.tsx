@@ -5,8 +5,9 @@ import { BackgroundLayer } from './components/BackgroundLayer';
 import { DarkenLayer } from './components/DarkenLayer';
 import { FilmOverlayLayer } from './components/FilmOverlayLayer';
 import { BeatText } from './components/BeatText';
+import { HeadlineWord } from './components/HeadlineWord';
 import { MusicTrack } from './components/MusicTrack';
-import { DEFAULT_FONT_CHOICE, type GratitudePostProps } from './constants';
+import { DEFAULT_FONT_CHOICE, BEAT_LENGTH_S, FPS, type GratitudePostProps } from './constants';
 
 // Pre-load the default font so the very first frame of a render isn't a
 // flash of fallback text. Other fonts in the registry are loaded lazily as
@@ -18,13 +19,18 @@ export const GratitudePost: React.FC<GratitudePostProps> = ({
   background,
   music,
   fontChoice = DEFAULT_FONT_CHOICE,
+  headlineWord,
 }) => {
+  const frameOffset = headlineWord?.trim() ? Math.round(BEAT_LENGTH_S * FPS) : 0;
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
       <BackgroundLayer background={background} />
       <FilmOverlayLayer />
       {/* FilmOverlayLayer added in Phase 3 */}
-      <BeatText beats={beats} fontChoice={fontChoice} />
+      {headlineWord?.trim() && (
+        <HeadlineWord word={headlineWord} fontChoice={fontChoice} />
+      )}
+      <BeatText beats={beats} fontChoice={fontChoice} frameOffset={frameOffset} />
       <MusicTrack music={music} />
     </AbsoluteFill>
   );

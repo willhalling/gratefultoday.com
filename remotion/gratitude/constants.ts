@@ -40,13 +40,13 @@ export const FILM_OVERLAY_FPS = 3;
 export const FILM_OVERLAY_FRAMES = 24;
 // Toned down from the aggressive pass — about 1/3 the dust count and less
 // frequent streaks. Still visibly filmic, no longer noisy.
-export const FILM_DUST_PER_FRAME = 14;
-export const FILM_DUST_STDDEV = 4;
-export const FILM_STREAK_MAX = 2;
+export const FILM_DUST_PER_FRAME = 26;
+export const FILM_DUST_STDDEV = 7;
+export const FILM_STREAK_MAX = 3;
 export const FILM_STREAK_VISIBLE_S = 0.6;
 export const FILM_STREAK_GAP_S = 2.4;
-export const FILM_STREAK_WIDTH_CHOICES = [1, 1, 1, 1, 2, 2, 3];
-export const FILM_STREAK_ALPHA_RANGE: [number, number] = [0.06, 0.28];
+export const FILM_STREAK_WIDTH_CHOICES = [1, 1, 1, 2, 2, 3, 3, 4];
+export const FILM_STREAK_ALPHA_RANGE: [number, number] = [0.08, 0.34];
 
 // Default font key used by the Python pipeline.
 export const DEFAULT_FONT_CHOICE = 'playfair';
@@ -75,10 +75,12 @@ export interface GratitudePostProps {
     url: string;
   };
   fontChoice?: FontChoice;
+  headlineWord?: string;
 }
 
-export function computeDurationInFrames(beats: string[]): number {
+export function computeDurationInFrames(beats: string[], headlineWord?: string): number {
   const beatCount = beats.filter((b) => b.trim()).length;
-  const seconds = Math.max(beatCount * BEAT_LENGTH_S, MIN_DURATION_S);
+  const headlineSlot = headlineWord?.trim() ? 1 : 0;
+  const seconds = Math.max((beatCount + headlineSlot) * BEAT_LENGTH_S, MIN_DURATION_S);
   return Math.round(seconds * FPS);
 }

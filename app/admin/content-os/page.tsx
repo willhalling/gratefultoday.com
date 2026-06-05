@@ -71,6 +71,7 @@ interface GeneratedDraft {
   beats: string[];
   description: string;
   tags: string[];
+  headlineWord: string;
 }
 
 interface GenerationFormState {
@@ -303,6 +304,7 @@ export default function ContentOsPage() {
           notes: editingPost.notes,
           background: editingPost.background,
           music: editingPost.music,
+          headlineWord: editingPost.headlineWord || '',
         }),
       });
       if (!res.ok) throw new Error('Failed to save post');
@@ -342,7 +344,9 @@ export default function ContentOsPage() {
       beats: string[];
       background?: { url: string; kind: 'image' | 'video' };
       music?: { url: string };
+      headlineWord?: string;
     } = { beats };
+    if (post.headlineWord?.trim()) props.headlineWord = post.headlineWord.trim();
     if (post.background) props.background = { url: post.background, kind: backgroundKind(post.background) };
     if (post.music) props.music = { url: post.music };
     return props;
@@ -465,7 +469,7 @@ export default function ContentOsPage() {
         body: JSON.stringify(generationForm),
       });
       const payload = (await res.json()) as {
-        posts?: Array<{ name: string; category: string; mainTopic: string; secondaryTopic: string; beats: string[]; description?: string; tags?: string[] }>;
+        posts?: Array<{ name: string; category: string; mainTopic: string; secondaryTopic: string; beats: string[]; description?: string; tags?: string[]; headlineWord?: string }>;
         error?: string;
       };
       if (!res.ok) throw new Error(payload.error || 'Failed to generate posts');
@@ -474,6 +478,7 @@ export default function ContentOsPage() {
           id: `${Date.now()}-${i}`,
           name: p.name, category: p.category, mainTopic: p.mainTopic, secondaryTopic: p.secondaryTopic,
           beats: p.beats, description: p.description || '', tags: p.tags || [],
+          headlineWord: p.headlineWord || '',
         })),
       );
     } catch (err) {
@@ -515,7 +520,7 @@ export default function ContentOsPage() {
         name: draft.name, category: draft.category, mainTopic: draft.mainTopic,
         secondaryTopic: draft.secondaryTopic, beat1: beats[0], beat2: beats[1],
         beat3: beats[2] || '', beat4: beats[3] || '', description: draft.description,
-        tags: draft.tags, status: 'generated', score: 50,
+        tags: draft.tags, status: 'generated', score: 50, headlineWord: draft.headlineWord || '',
       }),
     });
     if (!res.ok) { setError((await res.json()).error || 'Failed to save'); return; }
@@ -544,7 +549,7 @@ export default function ContentOsPage() {
       import('@/remotion/gratitude/constants'),
     ]).then(([{ GratitudePost }, { computeDurationInFrames }]) => {
       const beats = postBeats(editingPost);
-      setPlayerComp({ component: GratitudePost, durationInFrames: computeDurationInFrames(beats) });
+      setPlayerComp({ component: GratitudePost, durationInFrames: computeDurationInFrames(beats, editingPost.headlineWord) });
     }).catch(() => setPlayerComp(null));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPlayer, editingPost?.id]);
@@ -679,6 +684,7 @@ export default function ContentOsPage() {
                           </Button>
                         </div>
                         <Input size="sm" label="Name" value={draft.name} onValueChange={(v) => updateDraft(draft.id, { name: v })} />
+                        <Input size="sm" label="Headline word" value={draft.headlineWord} onValueChange={(v) => updateDraft(draft.id, { headlineWord: v.trim().toLowerCase() })} />
                         <div className="grid gap-2 md:grid-cols-2">
                           {draft.beats.map((beat, i) => (
                             <Textarea
@@ -1012,6 +1018,15 @@ export default function ContentOsPage() {
                     {/* ── Post fields ──────────────────────────────────────── */}
                     <div className="grid gap-3 md:grid-cols-2">
                       <Input size="sm" label="Name" value={editingPost.name} onValueChange={(v) => setEditingPost({ ...editingPost, name: v })} className="md:col-span-2" />
+                      <Input
+                        size="sm"
+                        label="Headline word"
+                        placeholder="e.g. still."
+                        value={editingPost.headlineWord || ''}
+                        onValueChange={(v) => setEditingPost({ ...editingPost, headlineWord: v.trim().toLowerCase() })}
+                        className="md:col-span-2"
+                        description="1 lowercase word shown as hook on the first screen"
+                      />
 
                       <Input
                         type="number"

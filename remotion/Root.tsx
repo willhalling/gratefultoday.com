@@ -7,6 +7,7 @@ import { computeDurationInFrames, FPS, VIDEO_H, VIDEO_W } from './gratitude/cons
 import type { DayResponse } from '../types/just-for-a-week';
 
 const gratitudePostSample = {
+  headlineWord: 'still.',
   beats: [
     "my sister called asking how i'm doing and i said fine, which wasn't a lie exactly",
     "she said she's been worried about me since dad's thing and i almost told her about the sleepless nights",
@@ -66,11 +67,12 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="GratitudePost"
         component={GratitudePost}
-        durationInFrames={computeDurationInFrames(gratitudePostSample.beats)}
+        durationInFrames={computeDurationInFrames(gratitudePostSample.beats, gratitudePostSample.headlineWord)}
         fps={FPS}
         width={VIDEO_W}
         height={VIDEO_H}
         defaultProps={{
+          headlineWord: gratitudePostSample.headlineWord,
           beats: gratitudePostSample.beats,
           background: {
             url: staticFile('video-test.mp4'),
