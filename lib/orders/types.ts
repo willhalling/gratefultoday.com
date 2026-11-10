@@ -99,7 +99,13 @@ export type OrderStatus =
   | 'script_ready' // buyer is reviewing
   | 'needs_review' // held for a person to check
   | 'declined' // won't be made
-  | 'approved'; // buyer approved the script; next: narration, preview, payment
+  | 'approved' // buyer approved the script; production starts
+  | 'narrating' // ElevenLabs is reading it
+  | 'rendering' // WaveCanvas is making the video
+  | 'ready' // video saved to our storage
+  | 'failed'; // production failed (see productionError)
+
+export const IN_PRODUCTION: readonly OrderStatus[] = ['approved', 'narrating', 'rendering'];
 
 /** The buyer's edits to the script, checked before approval. */
 export const ApproveRequest = z.object({

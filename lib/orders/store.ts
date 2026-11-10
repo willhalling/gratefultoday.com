@@ -20,6 +20,14 @@ export interface OrderDoc {
   /** Why the order is held or declined (internal). */
   reviewReason: string | null;
   generations: number;
+  /** Production (production.ts). */
+  narrationPath?: string | null;
+  narrationSeconds?: number | null;
+  renderId?: string | null;
+  renderProgress?: number | null;
+  videoPath?: string | null;
+  productionError?: string | null;
+  readyAt?: Timestamp | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   approvedAt: Timestamp | null;
@@ -33,6 +41,8 @@ export interface PublicOrder {
   recipientName: string;
   script: Script | null;
   generationsLeft: number;
+  /** 0–100 while WaveCanvas renders. */
+  renderProgress: number | null;
 }
 
 const db = () => getFirebaseAdmin().db;
@@ -63,9 +73,28 @@ export function toPublic(id: string, order: OrderDoc, maxGenerations: number): P
     occasion: order.occasion,
     status: order.status,
     recipientName: order.answers.address_as || order.answers.recipient_name,
-    script: order.status === 'approved' ? order.approved : order.status === 'script_ready' ? order.generated : null,
+    script: order.status === 'script_ready' ? order.generated : order.approved,
     generationsLeft: Math.max(0, maxGenerations - order.generations),
+    renderProgress: order.status === 'rendering' ? (order.renderProgress ?? null) : null,
   };
+}
+
+const bucket = () => getFirebaseAdmin().storage.bucket();
+
+export async function saveFile(path: string, data: Buffer, contentType: string) {
+  await bucket().file(path).save(data, { contentType, resumable: false, metadata: { cacheControl: 'private, max-age=0' } });
+}
+
+/** A time-limited link to a private file in our bucket. */
+export async function signedUrl(path: string, hours = 24 * 7, download?: string): Promise<string> {
+  const [url] = await bucket()
+    .file(path)
+    .getSignedUrl({
+      action: 'read',
+      expires: Date.now() + hours * 3_600_000,
+      ...(download ? { responseDisposition: `attachment; filename="${download}"` } : {}),
+    });
+  return url;
 }
 
 /**

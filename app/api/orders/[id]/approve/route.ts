@@ -2,14 +2,16 @@
  * POST /api/orders/:id/approve: the buyer approves the script, with any edits.
  * Edited scripts are checked before they can be narrated.
  */
-import type { NextRequest } from 'next/server';
+import { after, type NextRequest } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
+import { startProduction } from '@/lib/orders/production';
 import { error, handle, json, readBody } from '@/lib/orders/http';
 import { checkEditedScript } from '@/lib/orders/script';
 import { getOrder, toPublic, updateOrder, type OrderDoc } from '@/lib/orders/store';
 import { ApproveRequest, MAX_GENERATIONS, MAX_WORDS, wordCount } from '@/lib/orders/types';
 
-export const maxDuration = 60;
+// Covers the edit check, then narration and starting the render (in after()).
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
@@ -43,6 +45,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     update = { status: 'approved', approved: { ...order.generated, title, lines }, approvedAt: Timestamp.now() };
     await updateOrder(id, update);
+    // Narrate and start the render once the buyer has their answer.
+    const origin = req.nextUrl.origin;
+    after(() => startProduction(id, origin));
     return json(toPublic(id, { ...order, ...update }, MAX_GENERATIONS));
   });
 }
