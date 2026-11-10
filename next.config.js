@@ -1,69 +1,47 @@
 /** @type {import('next').NextConfig} */
+
+// Everything from the old site (sobriety chips and cards, thank-you cards, the
+// wall, blog, newsletter, quotes) is gone. Old URLs go to the home page so
+// indexed pages and links people already shared don't 404.
+const OLD_SECTIONS = [
+  'thank-you-cards',
+  'card',
+  'c',
+  'shared',
+  'sobriety-chips',
+  'sobriety-cards',
+  'sobriety-counter',
+  'wall',
+  'blog',
+  'affirmations',
+  'quotes',
+  'newsletter',
+  'about',
+  'support',
+  'contact',
+  'privacy',
+  'terms',
+  'email-video',
+  'just-for-a-week',
+  'just-for-today',
+  'sign-in',
+  'brand-test',
+];
+
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  serverExternalPackages: [
-    "@remotion/bundler",
-    "@remotion/renderer",
-    "@rspack/core",
-    "@rspack/binding",
-    "esbuild",
-  ],
-  // Keep config minimal like slowedgenerator; rely on workspace resolution
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "via.placeholder.com",
-      },
-      {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-      },
-      {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-      },
-      {
-        protocol: "https",
-        hostname: "funeralcollage.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "v3.fal.media",
-      },
-      {
-        protocol: "https",
-        hostname: "staging.funeralcollage.com",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000",
-      },
+      { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
+      { protocol: 'https', hostname: 'storage.googleapis.com' },
     ],
-    disableStaticImages: false,
   },
   async redirects() {
     return [
-      {
-        source: "/quotes",
-        destination: "/wall",
-        permanent: true,
-      },
-      {
-        source: "/quotes.html",
-        destination: "/wall",
-        permanent: true,
-      },
+      ...OLD_SECTIONS.flatMap((s) => [
+        { source: `/${s}`, destination: '/', permanent: true },
+        { source: `/${s}/:path*`, destination: '/', permanent: true },
+      ]),
+      { source: '/quotes.html', destination: '/', permanent: true },
     ];
   },
 };

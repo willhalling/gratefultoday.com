@@ -48,7 +48,11 @@ export function getFirebaseAdmin() {
           if (parsed.private_key && typeof parsed.private_key === 'string') {
             parsed.private_key = parsed.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
           }
-          const serviceAccount = parsed as admin.ServiceAccount & { project_id?: string };
+          const serviceAccount = parsed as admin.ServiceAccount & {
+            project_id?: string;
+            client_email?: string;
+            private_key?: string;
+          };
 
           if (!serviceAccount.client_email || !serviceAccount.private_key) {
             throw new Error(

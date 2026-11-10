@@ -1,181 +1,90 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
-@import "tailwindcss";
+@import 'tailwindcss';
 
-@plugin './hero.ts';
+@theme {
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 
-@source './node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@custom-variant dark (&:is(.dark *));
-
-@config "./tailwind.config.js";
-
-:root {
-  /* Grateful Today Brand Colors */
-  --brand-green: #36574e; /* Deep Sage Green */
-  --brand-amber: #d5ae70; /* Soft Gold */
-  --brand-gray: #222c2a; /* Charcoal */
-  --brand-light: #e8e2d8; /* Warm Cream */
+  --color-cream: #f7f2ea;
+  --color-paper: #fffdf9;
+  --color-ink: #1f2a26;
+  --color-muted: #5c6862;
+  --color-pine: #1f4d3f;
+  --color-pine-dark: #163a2f;
+  --color-ember: #c8553d;
+  --color-gold: #d9a85b;
+  --color-line: #e6ddd0;
 }
 
-/* Custom scrollbar styles */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 16px; /* Much thicker scrollbar */
-  height: 16px; /* For horizontal scrollbars */
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--scrollbar-track); /* Black background */
-  border-radius: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-primary) !important;
-  border-radius: 8px;
-  border: 2px solid var(--scrollbar-track); /* Black border around thumb */
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--scrollbar-primary-hover) !important;
-}
-
-.custom-scrollbar {
-  scrollbar-width: auto; /* Make it thick on Firefox too */
-  scrollbar-color: var(--scrollbar-primary) var(--scrollbar-track); /* Red thumb, black track */
-}
-
-/* Ensure scrollbar styles work in different contexts */
-.custom-scrollbar * {
-  scrollbar-width: auto;
-  scrollbar-color: var(--scrollbar-primary) var(--scrollbar-track);
-}
-
-/* Playfair Display Headings */
 @layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
   h1,
   h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: "Playfair Display", serif;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-
-  h1 {
-    font-weight: 700;
-  }
-
-  h2 {
-    font-weight: 600;
-  }
-
-  .font-heading {
-    font-family: "Playfair Display", serif;
-  }
-
-  .font-display {
-    font-family: "Playfair Display", serif;
+  h3 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
   }
 }
 
-/* Grateful Today Theme Custom Components */
-@layer components {
-  /* Select arrow with Forest Green styling */
-  .select-arrow-primary {
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(1, 51, 40)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+/* Kinetic-text preview on the landing page: each line lands in turn, like the real videos. */
+@keyframes line-in {
+  0%,
+  4% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
   }
-
-  /* PRIMARY button with Brand Green styling */
-  .btn-primary {
-    @apply bg-green-700 hover:bg-green-800 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  10%,
+  88% {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
-
-  /* Dark button with Brand Gray styling */
-  .btn-dark {
-    @apply bg-gray-800 hover:bg-gray-900 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  96%,
+  100% {
+    opacity: 0;
   }
+}
 
-  /* Secondary button with Brand Amber styling (warm accent) */
-  .btn-terracotta {
-    @apply bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+.kinetic-line {
+  opacity: 0;
+  animation: line-in 14s ease-out infinite;
+}
+
+@keyframes snow {
+  from {
+    transform: translateY(-10%);
   }
-
-  /* Brand green accent button */
-  .btn-forest {
-    @apply bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200;
+  to {
+    transform: translateY(110%);
   }
+}
 
-  /* Dark surface cards with prominence */
-  .card-dark {
-    @apply bg-gray-800 text-white border border-gray-700 rounded-xl shadow-premium;
+.snowfall {
+  background-image:
+    radial-gradient(2px 2px at 20% 10%, #fff8 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 60% 30%, #fff6 50%, transparent 51%),
+    radial-gradient(2px 2px at 80% 60%, #fff7 50%, transparent 51%),
+    radial-gradient(1px 1px at 35% 75%, #fff9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 10% 50%, #fff5 50%, transparent 51%);
+  background-size: 100% 50%;
+  animation: snow 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kinetic-line {
+    animation: none;
+    opacity: 1;
   }
-
-  /* Brand green surface cards */
-  .card-forest {
-    @apply bg-green-700 text-white border border-green-600 rounded-xl shadow-soft;
-  }
-
-  /* Light surface cards (for contrast) */
-  .card-light {
-    @apply bg-white border border-gray-200 rounded-xl shadow-soft;
-  }
-
-  /* Gradient backgrounds with brand colors */
-  .bg-gradient-earth {
-    background: linear-gradient(
-      135deg,
-      var(--brand-green) 0%,
-      var(--brand-gray) 50%,
-      var(--brand-amber) 100%
-    );
-  }
-
-  .bg-gradient-forest {
-    background: linear-gradient(
-      135deg,
-      var(--brand-green) 0%,
-      var(--brand-gray) 100%
-    );
-  }
-
-  .bg-gradient-warm {
-    background: linear-gradient(
-      135deg,
-      var(--brand-light) 0%,
-      var(--brand-amber) 100%
-    );
-  }
-
-  /* Dark-prominent gradient */
-  .bg-gradient-dark-forest {
-    background: linear-gradient(
-      135deg,
-      var(--brand-gray) 0%,
-      var(--brand-green) 100%
-    );
-  }
-
-  /* Text color utilities */
-  .text-forest {
-    color: var(--brand-green);
-  }
-
-  .text-midnight {
-    color: var(--brand-gray);
-  }
-
-  .text-earth {
-    color: var(--brand-amber);
-  }
-
-  /* Selection styling with Brand Amber */
-  ::selection {
-    background-color: var(--brand-amber);
-    color: white;
-  }
-
-  ::-moz-selection {
-    background-color: var(--brand-amber);
-    color: white;
+  .snowfall {
+    animation: none;
   }
 }

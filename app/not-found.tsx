@@ -1,30 +1,21 @@
 import Link from 'next/link';
+import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-green-50 to-brand-amber-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
-        <div className="mb-8">
-          <h1 className="text-9xl font-bold text-brand-green-700 mb-2">404</h1>
-          <h2 className="text-3xl font-semibold text-brand-amber-800 mb-4">
-            Page Not Found
-          </h2>
-          <p className="text-gray-700 text-lg mb-8">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
-        </div>
-
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-xl px-4 py-24 text-center sm:px-6">
+        <h1 className="text-4xl font-semibold text-pine">We couldn’t find that page</h1>
+        <p className="mt-4 text-lg text-muted">It may have moved, or the link may be incomplete.</p>
         <Link
           href="/"
-          className="inline-block bg-brand-green-700 hover:bg-brand-green-800 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+          className="mt-8 inline-block rounded-full bg-pine px-6 py-3 font-semibold text-white transition hover:bg-pine-dark"
         >
-          Go Home
+          Go to the home page
         </Link>
-
-        <div className="mt-12 text-sm text-gray-600">
-          <p>What are you grateful for today?</p>
-        </div>
-      </div>
-    </div>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

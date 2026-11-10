@@ -23,7 +23,7 @@ export default function AdminGuard({ children, loadingComponent }: AdminGuardPro
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firestoreAuth, (user) => {
       if (!user || !isAdmin(user.uid)) {
-        router.push('/');
+        router.push(user ? '/' : '/admin/sign-in');
         return;
       }
       
