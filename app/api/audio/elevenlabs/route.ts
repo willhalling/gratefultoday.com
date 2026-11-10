@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rejectNonAdmin } from '@/lib/tiktok-maker/admin-auth';
 
 export async function POST(req: NextRequest) {
+  // Spends ElevenLabs credit with the server key, so admins only.
+  const rejected = await rejectNonAdmin(req);
+  if (rejected) return rejected;
+
   try {
     const { text, voiceId, modelId, stability, similarityBoost, style } = await req.json();
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
+    }
+    if (typeof text !== 'string' || text.length > 3000) {
+      return NextResponse.json({ error: 'Text is too long (3000 characters max)' }, { status: 400 });
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;

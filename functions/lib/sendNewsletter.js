@@ -40,28 +40,29 @@ const params_1 = require("firebase-functions/params");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const undici_1 = require("undici");
 const emailTemplate_1 = require("./utils/emailTemplate");
+const newsletterVideoServer_1 = require("./utils/newsletterVideoServer");
 const dailyPrompts_1 = require("./constants/dailyPrompts");
 // Runtime config
-const BREVO_API_KEY = (0, params_1.defineString)('BREVO_API_KEY');
-const BREVO_DAILY_LIST_ID = (0, params_1.defineString)('BREVO_DAILY_LIST_ID'); // List 2
-const BREVO_WEEKLY_LIST_ID = (0, params_1.defineString)('BREVO_WEEKLY_LIST_ID'); // List 4
-const SENDER_EMAIL = (0, params_1.defineString)('BREVO_SENDER_EMAIL');
+const BREVO_API_KEY = (0, params_1.defineString)("BREVO_API_KEY");
+const BREVO_DAILY_LIST_ID = (0, params_1.defineString)("BREVO_DAILY_LIST_ID"); // List 2
+const BREVO_WEEKLY_LIST_ID = (0, params_1.defineString)("BREVO_WEEKLY_LIST_ID"); // List 4
+const SENDER_EMAIL = (0, params_1.defineString)("BREVO_SENDER_EMAIL");
 /**
  * Scheduled function to send newsletter at 7am UTC
  * Sends to daily list (ID 2) every day
  * Sends to weekly list (ID 4) on Mondays only
  */
 exports.sendNewsletter = (0, scheduler_1.onSchedule)({
-    region: 'us-central1',
-    schedule: '0 7 * * *', // Every day at 7am UTC (cron format)
-    timeZone: 'UTC',
+    region: "us-central1",
+    schedule: "0 7 * * *", // Every day at 7am UTC (cron format)
+    timeZone: "UTC",
 }, async () => {
     const brevoKey = BREVO_API_KEY.value();
     const dailyListId = BREVO_DAILY_LIST_ID.value();
     const weeklyListId = BREVO_WEEKLY_LIST_ID.value();
-    const senderEmail = SENDER_EMAIL.value() || 'newsletter@mail.gratefultoday.com';
+    const senderEmail = SENDER_EMAIL.value() || "newsletter@mail.gratefultoday.com";
     if (!brevoKey) {
-        firebase_functions_1.logger.error('BREVO_API_KEY not configured');
+        firebase_functions_1.logger.error("BREVO_API_KEY not configured");
         return;
     }
     try {
@@ -76,7 +77,7 @@ exports.sendNewsletter = (0, scheduler_1.onSchedule)({
         if (dailyListId) {
             const dailyContacts = await fetchBrevoListContacts(brevoKey, parseInt(dailyListId));
             firebase_functions_1.logger.info(`Sending to ${dailyContacts.length} daily subscribers`);
-            const { successCount, errorCount } = await sendToContacts(dailyContacts, 'daily', now, brevoKey, senderEmail);
+            const { successCount, errorCount } = await sendToContacts(dailyContacts, "daily", now, brevoKey, senderEmail);
             totalSuccessCount += successCount;
             totalErrorCount += errorCount;
         }
@@ -84,15 +85,15 @@ exports.sendNewsletter = (0, scheduler_1.onSchedule)({
         if (weeklyListId && isMonday) {
             const weeklyContacts = await fetchBrevoListContacts(brevoKey, parseInt(weeklyListId));
             firebase_functions_1.logger.info(`Sending to ${weeklyContacts.length} weekly subscribers (Monday)`);
-            const { successCount, errorCount } = await sendToContacts(weeklyContacts, 'weekly', now, brevoKey, senderEmail);
+            const { successCount, errorCount } = await sendToContacts(weeklyContacts, "weekly", now, brevoKey, senderEmail);
             totalSuccessCount += successCount;
             totalErrorCount += errorCount;
         }
         else if (weeklyListId) {
-            firebase_functions_1.logger.info('Skipping weekly list (not Monday)');
+            firebase_functions_1.logger.info("Skipping weekly list (not Monday)");
         }
         // Log sent record to Firestore
-        await db.collection('newsletterSentLog').add({
+        await db.collection("newsletterSentLog").add({
             dayOfYear,
             date: now,
             dailySent: dailyListId ? totalSuccessCount : 0,
@@ -102,7 +103,7 @@ exports.sendNewsletter = (0, scheduler_1.onSchedule)({
         firebase_functions_1.logger.info(`Newsletter sent for day ${dayOfYear}: ${totalSuccessCount} succeeded, ${totalErrorCount} failed`);
     }
     catch (error) {
-        firebase_functions_1.logger.error('Error in sendNewsletter:', error);
+        firebase_functions_1.logger.error("Error in sendNewsletter:", error);
     }
 });
 /**
@@ -122,12 +123,12 @@ async function sendToContacts(contacts, frequency, date, brevoKey, senderEmail) 
     try {
         // Query without where clauses to avoid index requirement, filter in memory
         const snapshot = await db
-            .collection('gratitudePosts')
-            .orderBy('createdAt', 'desc')
+            .collection("gratitudePosts")
+            .orderBy("createdAt", "desc")
             .limit(200)
             .get();
         // Count posts from yesterday that are not archived
-        snapshot.docs.forEach(doc => {
+        snapshot.docs.forEach((doc) => {
             const data = doc.data();
             // Skip archived posts
             if (data.isArchived === true) {
@@ -151,8 +152,9 @@ async function sendToContacts(contacts, frequency, date, brevoKey, senderEmail) 
         firebase_functions_1.logger.info(`Yesterday's post count: ${yesterdayCount}`);
     }
     catch (error) {
-        firebase_functions_1.logger.error('Error counting yesterday posts:', error);
+        firebase_functions_1.logger.error("Error counting yesterday posts:", error);
     }
+    const gifUrl = await (0, newsletterVideoServer_1.findNewsletterGifUrl)(date.toISOString().slice(0, 10));
     for (const contact of contacts) {
         try {
             const html = (0, emailTemplate_1.generateEmailHTML)({
@@ -161,21 +163,36 @@ async function sendToContacts(contacts, frequency, date, brevoKey, senderEmail) 
                 frequency,
                 isTest: false,
                 yesterdayCount,
+                date,
+                sobrietyDate: contact.sobrietyDate,
+                gifUrl,
             });
             const todaysPrompt = (0, dailyPrompts_1.getTodaysPrompt)();
-            const now = new Date();
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const dateStr = `${now.getDate()} ${months[now.getMonth()]}`;
+            const months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+            ];
+            const dateStr = `${date.getDate()} ${months[date.getMonth()]}`;
             const subject = `${todaysPrompt.subject} | ${dateStr}`;
-            const response = await (0, undici_1.fetch)('https://api.brevo.com/v3/smtp/email', {
-                method: 'POST',
+            const response = await (0, undici_1.fetch)("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'api-key': brevoKey,
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "api-key": brevoKey,
                 },
                 body: JSON.stringify({
-                    sender: { email: senderEmail, name: 'Grateful Today' },
+                    sender: { email: senderEmail, name: "Grateful Today" },
                     to: [{ email: contact.email, name: contact.name }],
                     subject: subject,
                     htmlContent: html,
@@ -205,24 +222,25 @@ async function sendToContacts(contacts, frequency, date, brevoKey, senderEmail) 
 async function fetchBrevoListContacts(apiKey, listId) {
     try {
         const response = await (0, undici_1.fetch)(`https://api.brevo.com/v3/contacts/lists/${listId}/contacts?limit=500`, {
-            method: 'GET',
+            method: "GET",
             headers: {
-                Accept: 'application/json',
-                'api-key': apiKey,
+                Accept: "application/json",
+                "api-key": apiKey,
             },
         });
         if (!response.ok) {
-            firebase_functions_1.logger.error('Failed to fetch Brevo contacts:', await response.text());
+            firebase_functions_1.logger.error("Failed to fetch Brevo contacts:", await response.text());
             return [];
         }
         const data = (await response.json());
         return data.contacts.map((c) => ({
             email: c.email,
             name: c.attributes?.FIRSTNAME,
+            sobrietyDate: c.attributes?.SOBRIETY_DATE,
         }));
     }
     catch (error) {
-        firebase_functions_1.logger.error('Error fetching Brevo contacts:', error);
+        firebase_functions_1.logger.error("Error fetching Brevo contacts:", error);
         return [];
     }
 }

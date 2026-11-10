@@ -1,41 +1,43 @@
-import { Crisp, GoogleAnalytics, HeroUIThemeProvider } from '@/components/shared-ui';
-import GratefulTodayFooter from '@/components/footer';
-import Nav from '@/components/nav';
-import { AuthUserProvider } from '@/context/AuthUserContext';
+import type { Metadata } from "next";
+import {
+  Crisp,
+  GoogleAnalytics,
+  HeroUIThemeProvider,
+} from "@/components/shared-ui";
+import { AuthUserProvider } from "@/context/AuthUserContext";
 
-import '../global.css';
+import "../global.css";
 
-export const metadata = {
-  title: 'Grateful Today — Recovery & Gratitude Tools',
+export const metadata: Metadata = {
+  metadataBase: new URL("https://gratefultoday.com"),
+  title: "Grateful Today — One day. One thing.",
   description:
-    'Celebrate your recovery journey with virtual sobriety chips, daily gratitude quotes, and tools designed to support your path to wellness. What are you grateful for today?',
+    "A simple daily gratitude practice, a supportive community wall, and colourful sobriety chips and cards for the days that count.",
   keywords:
-    'sobriety chips, recovery tools, gratitude quotes, addiction recovery, sobriety milestones, grateful living, recovery support, virtual coins, sobriety anniversary',
+    "daily gratitude, gratitude wall, sobriety chips, recovery tools, sobriety cards, sobriety milestones, grateful living, recovery support",
   openGraph: {
-    title: 'Grateful Today — Recovery & Gratitude Tools',
+    title: "Grateful Today — One day. One thing.",
     description:
-      'Celebrate your recovery journey with virtual sobriety chips, daily gratitude quotes, and tools designed to support your path to wellness.',
-    url: 'https://gratefultoday.com',
-    siteName: 'Grateful Today',
+      "Daily gratitude, a supportive wall, and personal sobriety chips and cards for the days that count.",
+    url: "https://gratefultoday.com",
+    siteName: "Grateful Today",
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+        url: "/grateful-today-hero.png",
         width: 1200,
         height: 630,
-        alt: 'Grateful Today - Recovery & Gratitude Tools',
+        alt: "Grateful Today — One day. One thing.",
       },
     ],
-    locale: 'en_US',
-    type: 'website',
+    locale: "en_US",
+    type: "website",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Grateful Today — Recovery & Gratitude Tools',
+    card: "summary_large_image",
+    title: "Grateful Today — One day. One thing.",
     description:
-      'Celebrate your recovery journey with virtual sobriety chips, daily gratitude quotes, and tools designed to support your path to wellness.',
-    images: [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    ],
+      "Daily gratitude and personal sobriety milestones, one day at a time.",
+    images: ["/grateful-today-hero.png"],
   },
   robots: {
     index: true,
@@ -43,14 +45,14 @@ export const metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
 };
 
-export default function Layout({ children }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -69,12 +71,12 @@ export default function Layout({ children }) {
           }}
         />
       </head>
-      <body>
+      <body className="bg-primary-100 text-neutral-900">
         <HeroUIThemeProvider>
           <AuthUserProvider>{children}</AuthUserProvider>
         </HeroUIThemeProvider>
       </body>
-      <Crisp id={'624c1899-40af-4000-95a6-47afdff528da'} />
+      <Crisp id="624c1899-40af-4000-95a6-47afdff528da" />
       <GoogleAnalytics id={process.env.NEXT_PUBLIC_GA_ID} />
     </html>
   );

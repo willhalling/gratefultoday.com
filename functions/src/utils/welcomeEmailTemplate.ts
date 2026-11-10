@@ -6,7 +6,7 @@
 interface WelcomeEmailData {
   recipientEmail: string;
   firstName?: string;
-  frequency: 'daily' | 'weekly';
+  frequency: "daily" | "weekly";
 }
 
 /**
@@ -15,10 +15,12 @@ interface WelcomeEmailData {
 export function generateWelcomeEmailHTML(data: WelcomeEmailData): string {
   const { recipientEmail, firstName, frequency } = data;
   const wallUrl = `https://gratefultoday.com/wall`;
+  const todayUrl = `https://gratefultoday.com/`;
   const preferencesUrl = `https://gratefultoday.com/newsletter/preferences?email=${encodeURIComponent(recipientEmail)}`;
 
-  const greeting = firstName ? `Hi ${firstName}` : 'Hi there';
-  const frequencyText = frequency === 'daily' ? 'every morning' : 'every Monday';
+  const greeting = firstName ? `Hi ${firstName}` : "Hi there";
+  const frequencyText =
+    frequency === "daily" ? "every morning" : "every Monday";
 
   return `
 <!DOCTYPE html>
@@ -37,6 +39,7 @@ export function generateWelcomeEmailHTML(data: WelcomeEmailData): string {
           <!-- Header -->
           <tr>
             <td style="padding: 32px 32px 24px 32px; background-color: #fafaf9; border-radius: 8px 8px 0 0;">
+              <p style="margin: 0 0 10px; font-size: 12px; font-weight: 700; color: #565f58; letter-spacing: 1px; text-transform: uppercase;">One day. One thing.</p>
               <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #292524; line-height: 1.3;">
                 Welcome to Grateful Today
               </h1>
@@ -88,6 +91,9 @@ export function generateWelcomeEmailHTML(data: WelcomeEmailData): string {
                   Visit the Gratitude Wall
                 </a>
               </div>
+              <p style="margin: 0 0 24px; text-align: center; font-size: 15px;">
+                <a href="${todayUrl}" style="color: #565f58; text-decoration: underline;">Visit Today at Grateful Today</a>
+              </p>
 
               <!-- Wall Description -->
               <div style="margin-bottom: 32px; padding: 16px; background-color: #f5f5f4; border-radius: 6px;">

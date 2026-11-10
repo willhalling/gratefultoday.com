@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "tailwindcss";
 
 @plugin './hero.ts';
 
@@ -10,10 +10,10 @@
 
 :root {
   /* Grateful Today Brand Colors */
-  --brand-green: #15803d; /* Primary brand color */
-  --brand-amber: #b45309; /* Warm accent */
-  --brand-gray: #1f2937; /* Dark text/backgrounds */
-  --brand-light: #f9fafb; /* Light backgrounds */
+  --brand-green: #36574e; /* Deep Sage Green */
+  --brand-amber: #d5ae70; /* Soft Gold */
+  --brand-gray: #222c2a; /* Charcoal */
+  --brand-light: #e8e2d8; /* Warm Cream */
 }
 
 /* Custom scrollbar styles */
@@ -56,7 +56,7 @@
   h4,
   h5,
   h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: "Playfair Display", serif;
     font-weight: 600;
     line-height: 1.2;
   }
@@ -70,11 +70,11 @@
   }
 
   .font-heading {
-    font-family: 'Playfair Display', serif;
+    font-family: "Playfair Display", serif;
   }
 
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: "Playfair Display", serif;
   }
 }
 
@@ -131,16 +131,28 @@
   }
 
   .bg-gradient-forest {
-    background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-gray) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--brand-green) 0%,
+      var(--brand-gray) 100%
+    );
   }
 
   .bg-gradient-warm {
-    background: linear-gradient(135deg, var(--brand-light) 0%, var(--brand-amber) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--brand-light) 0%,
+      var(--brand-amber) 100%
+    );
   }
 
   /* Dark-prominent gradient */
   .bg-gradient-dark-forest {
-    background: linear-gradient(135deg, var(--brand-gray) 0%, var(--brand-green) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--brand-gray) 0%,
+      var(--brand-green) 100%
+    );
   }
 
   /* Text color utilities */

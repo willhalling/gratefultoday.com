@@ -1,0 +1,41 @@
+/* Slow "breathing" drift on the photo — calm, a few percent of zoom. */
+@keyframes drift {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.09) translate3d(-1.2%, -1.5%, 0);
+  }
+}
+
+.photo {
+  transform: scale(1.02);
+  transform-origin: 50% 40%;
+}
+
+.drift {
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+/* Thumbnails drift only while hovered/focused. */
+.hoverDrift {
+  transition: transform 6s ease-out;
+}
+
+:global(.group):hover .hoverDrift,
+:global(.group):focus-visible .hoverDrift {
+  transform: scale(1.1) translate3d(-1%, -1.5%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift {
+    animation: none;
+  }
+
+  .hoverDrift,
+  :global(.group):hover .hoverDrift,
+  :global(.group):focus-visible .hoverDrift {
+    transition: none;
+    transform: scale(1.02);
+  }
+}

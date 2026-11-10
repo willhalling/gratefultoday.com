@@ -1,6 +1,13 @@
-'use client';
+"use client";
 
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react';
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
 import {
   collection,
   query,
@@ -15,16 +22,18 @@ import {
   increment,
   type QueryDocumentSnapshot,
   type Timestamp,
-} from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaPrayingHands } from 'react-icons/fa';
-import { HiArchive, HiFlag } from 'react-icons/hi';
-import { Virtuoso } from 'react-virtuoso';
-import { useAuth } from '@/context/AuthUserContext';
-import { firestoreDb } from '@/firebase/firebase-config';
-import type { GratitudePost } from '@/types/gratitude';
-import { isAdmin } from '@/types/gratitude';
+} from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { FaPrayingHands } from "react-icons/fa";
+import { HiArchive, HiFlag } from "react-icons/hi";
+import { Virtuoso } from "react-virtuoso";
+import { useAuth } from "@/context/AuthUserContext";
+import { firestoreDb } from "@/firebase/firebase-config";
+import { mentionsRecoveryMilestone } from "@/lib/gratitude-content";
+import type { GratitudePost } from "@/types/gratitude";
+import { isAdmin } from "@/types/gratitude";
 
 const POSTS_PER_PAGE = 50; // Load more for masonry layout
 
@@ -38,24 +47,26 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
-  const [view, setView] = useState<'all' | 'personal'>('all');
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<any> | null>(
+    null,
+  );
+  const [view, setView] = useState<"all" | "personal">("all");
   const [switching, setSwitching] = useState(false);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState({
-    title: '',
-    message: '',
-    type: 'info' as 'info' | 'confirm',
+    title: "",
+    message: "",
+    type: "info" as "info" | "confirm",
   });
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const showModal = (
     title: string,
     message: string,
-    type: 'info' | 'confirm' = 'info',
-    action?: () => void
+    type: "info" | "confirm" = "info",
+    action?: () => void,
   ) => {
     setModalContent({ title, message, type });
     setPendingAction(action ? () => action : null);
@@ -71,32 +82,34 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
   };
 
   const formatRelativeTime = (timestamp: Timestamp | Date | undefined) => {
-    if (!timestamp) return 'Just now';
+    if (!timestamp) return "Just now";
 
-    const date = 'toDate' in timestamp ? timestamp.toDate() : timestamp;
+    const date = "toDate" in timestamp ? timestamp.toDate() : timestamp;
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 60) return "Just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
     return `${Math.floor(diffInSeconds / 604800)}w ago`;
   };
 
   const handleFlag = async (postId: string) => {
     if (!user) {
-      showModal('Sign In Required', 'Please sign in to flag posts');
+      showModal("Sign In Required", "Please sign in to flag posts");
       return;
     }
 
     showModal(
-      'Flag Post',
-      'Flag this post for review? This will help keep our community safe and supportive.',
-      'confirm',
+      "Flag Post",
+      "Flag this post for review? This will help keep our community safe and supportive.",
+      "confirm",
       async () => {
         try {
-          const postRef = doc(firestoreDb, 'gratitudePosts', postId);
+          const postRef = doc(firestoreDb, "gratitudePosts", postId);
           const currentPost = posts.find((p) => p.id === postId);
           const newFlagCount = (currentPost?.flagCount || 0) + 1;
 
@@ -110,40 +123,43 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
           if (newFlagCount >= 3) {
             setPosts(posts.filter((p) => p.id !== postId));
           }
-          showModal('Thank You', 'Thank you for helping keep our community safe.');
+          showModal(
+            "Thank You",
+            "Thank you for helping keep our community safe.",
+          );
         } catch (error) {
-          console.error('Error flagging post:', error);
-          showModal('Error', 'Something went wrong. Please try again.');
+          console.error("Error flagging post:", error);
+          showModal("Error", "Something went wrong. Please try again.");
         }
-      }
+      },
     );
   };
 
   const handleArchive = async (postId: string) => {
     if (!user || !isAdmin(user.uid)) {
-      showModal('Admin Required', 'Admin access required');
+      showModal("Admin Required", "Admin access required");
       return;
     }
 
     showModal(
-      'Archive Post',
-      'Archive this post? It will be hidden from the wall.',
-      'confirm',
+      "Archive Post",
+      "Archive this post? It will be hidden from the wall.",
+      "confirm",
       async () => {
         try {
-          const postRef = doc(firestoreDb, 'gratitudePosts', postId);
+          const postRef = doc(firestoreDb, "gratitudePosts", postId);
           await updateDoc(postRef, {
             isArchived: true,
           });
 
           // Remove from local state
           setPosts(posts.filter((p) => p.id !== postId));
-          showModal('Success', 'Post archived successfully.');
+          showModal("Success", "Post archived successfully.");
         } catch (error) {
-          console.error('Error archiving post:', error);
-          showModal('Error', 'Something went wrong. Please try again.');
+          console.error("Error archiving post:", error);
+          showModal("Error", "Something went wrong. Please try again.");
         }
-      }
+      },
     );
   };
 
@@ -207,6 +223,14 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
               {post.promptText}
             </div>
           )}
+          {mentionsRecoveryMilestone(post.text) && (
+            <Link
+              href="/sobriety-chips"
+              className="mt-3 inline-block text-xs font-semibold text-primary-800 underline underline-offset-4"
+            >
+              celebrating a milestone? make a chip →
+            </Link>
+          )}
         </div>
       </motion.div>
     );
@@ -217,25 +241,25 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
     setLoadingMore(true);
 
     try {
-      const postsRef = collection(firestoreDb, 'gratitudePosts');
+      const postsRef = collection(firestoreDb, "gratitudePosts");
       let q;
 
-      if (view === 'personal' && user) {
+      if (view === "personal" && user) {
         q = query(
           postsRef,
-          where('flagged', '==', false),
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
+          where("flagged", "==", false),
+          where("userId", "==", user.uid),
+          orderBy("createdAt", "desc"),
           startAfter(lastDoc),
-          limit(POSTS_PER_PAGE)
+          limit(POSTS_PER_PAGE),
         );
       } else {
         q = query(
           postsRef,
-          where('flagged', '==', false),
-          orderBy('createdAt', 'desc'),
+          where("flagged", "==", false),
+          orderBy("createdAt", "desc"),
           startAfter(lastDoc),
-          limit(POSTS_PER_PAGE)
+          limit(POSTS_PER_PAGE),
         );
       }
 
@@ -245,8 +269,8 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
           (doc) =>
             ({
               id: doc.id,
-              ...doc.data(),
-            }) as GratitudePost
+              ...(doc.data() as Omit<GratitudePost, "id">),
+            }) as GratitudePost,
         )
         .filter((post) => !post.isArchived); // Filter out archived posts client-side
 
@@ -254,7 +278,7 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
       setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
       setHasMore(snapshot.docs.length === POSTS_PER_PAGE);
     } catch (error) {
-      console.error('Error loading more posts:', error);
+      console.error("Error loading more posts:", error);
     } finally {
       setLoadingMore(false);
     }
@@ -265,23 +289,23 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
     setSwitching(true);
     setLoading(true);
 
-    const postsRef = collection(firestoreDb, 'gratitudePosts');
+    const postsRef = collection(firestoreDb, "gratitudePosts");
     let q;
 
-    if (view === 'personal' && user) {
+    if (view === "personal" && user) {
       q = query(
         postsRef,
-        where('flagged', '==', false),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(POSTS_PER_PAGE)
+        where("flagged", "==", false),
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc"),
+        limit(POSTS_PER_PAGE),
       );
     } else {
       q = query(
         postsRef,
-        where('flagged', '==', false),
-        orderBy('createdAt', 'desc'),
-        limit(POSTS_PER_PAGE)
+        where("flagged", "==", false),
+        orderBy("createdAt", "desc"),
+        limit(POSTS_PER_PAGE),
       );
     }
 
@@ -294,8 +318,8 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
             (doc) =>
               ({
                 id: doc.id,
-                ...doc.data(),
-              }) as GratitudePost
+                ...(doc.data() as Omit<GratitudePost, "id">),
+              }) as GratitudePost,
           )
           .filter((post) => !post.isArchived); // Filter out archived posts client-side
 
@@ -306,9 +330,9 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
         setSwitching(false);
       },
       (error) => {
-        console.error('Error loading posts:', error);
+        console.error("Error loading posts:", error);
         setLoading(false);
-      }
+      },
     );
 
     // Cleanup listener on unmount
@@ -323,21 +347,21 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
         {(user || authLoading) && (
           <div className="flex items-center justify-center gap-6 mb-6">
             <button
-              onClick={() => setView('all')}
+              onClick={() => setView("all")}
               className={`text-sm font-medium transition-colors ${
-                view === 'all'
-                  ? 'text-[#78716c] underline underline-offset-4'
-                  : 'text-neutral-500 hover:text-neutral-700'
+                view === "all"
+                  ? "text-[#78716c] underline underline-offset-4"
+                  : "text-neutral-500 hover:text-neutral-700"
               }`}
             >
               All Posts
             </button>
             <button
-              onClick={() => setView('personal')}
+              onClick={() => setView("personal")}
               className={`text-sm font-medium transition-colors ${
-                view === 'personal'
-                  ? 'text-[#78716c] underline underline-offset-4'
-                  : 'text-neutral-500 hover:text-neutral-700'
+                view === "personal"
+                  ? "text-[#78716c] underline underline-offset-4"
+                  : "text-neutral-500 hover:text-neutral-700"
               }`}
             >
               My Posts
@@ -371,8 +395,12 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-sm">
-          <p className="text-neutral-700 text-lg font-medium mb-1">No posts yet</p>
-          <p className="text-neutral-500 text-sm">Be the first to share your gratitude</p>
+          <p className="text-neutral-700 text-lg font-medium mb-1">
+            No posts yet
+          </p>
+          <p className="text-neutral-500 text-sm">
+            Be the first to share your gratitude
+          </p>
         </div>
       </div>
     );
@@ -384,21 +412,21 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
       {user && (
         <div className="flex items-center justify-center gap-6 mb-6">
           <button
-            onClick={() => setView('all')}
+            onClick={() => setView("all")}
             className={`text-sm font-medium transition-colors ${
-              view === 'all'
-                ? 'text-[#78716c] underline underline-offset-4'
-                : 'text-neutral-500 hover:text-neutral-700'
+              view === "all"
+                ? "text-[#78716c] underline underline-offset-4"
+                : "text-neutral-500 hover:text-neutral-700"
             }`}
           >
             All Posts
           </button>
           <button
-            onClick={() => setView('personal')}
+            onClick={() => setView("personal")}
             className={`text-sm font-medium transition-colors ${
-              view === 'personal'
-                ? 'text-[#78716c] underline underline-offset-4'
-                : 'text-neutral-500 hover:text-neutral-700'
+              view === "personal"
+                ? "text-[#78716c] underline underline-offset-4"
+                : "text-neutral-500 hover:text-neutral-700"
             }`}
           >
             My Posts
@@ -423,7 +451,7 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
             disabled={loadingMore}
             className="px-6 py-2.5 bg-[#78716c] hover:bg-[#78716c]/90 text-white text-sm font-semibold rounded-full transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loadingMore ? 'Loading...' : 'Load More Gratitudes'}
+            {loadingMore ? "Loading..." : "Load More Gratitudes"}
           </button>
         </div>
       )}
@@ -431,14 +459,20 @@ export function GratitudeWall({ refreshTrigger }: GratitudeWallProps) {
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">{modalContent.title}</ModalHeader>
+          <ModalHeader className="flex flex-col gap-1">
+            {modalContent.title}
+          </ModalHeader>
           <ModalBody>
             <p>{modalContent.message}</p>
           </ModalBody>
           <ModalFooter>
-            {modalContent.type === 'confirm' ? (
+            {modalContent.type === "confirm" ? (
               <>
-                <Button color="default" variant="light" onPress={() => setModalOpen(false)}>
+                <Button
+                  color="default"
+                  variant="light"
+                  onPress={() => setModalOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button color="primary" onPress={handleModalConfirm}>

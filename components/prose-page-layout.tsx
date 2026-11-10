@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ProsePageLayoutProps {
   /**
@@ -17,23 +17,23 @@ interface ProsePageLayoutProps {
    * Maximum width of content
    * @default 'prose' (65ch)
    */
-  maxWidth?: 'prose' | 'wide' | 'full';
+  maxWidth?: "prose" | "wide" | "full";
 }
 
 export default function ProsePageLayout({
   title,
   subtitle,
   children,
-  maxWidth = 'prose',
+  maxWidth = "prose",
 }: ProsePageLayoutProps) {
   const maxWidthClasses = {
-    prose: 'max-w-prose', // ~65ch
-    wide: 'max-w-4xl',
-    full: 'max-w-7xl',
+    prose: "max-w-prose", // ~65ch
+    wide: "max-w-4xl",
+    full: "max-w-7xl",
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Heading Section */}
         <div className="text-center mb-12">
@@ -41,7 +41,9 @@ export default function ProsePageLayout({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-xl text-neutral-600 max-w-2xl mx-auto">{subtitle}</p>
+            <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
+              {subtitle}
+            </p>
           )}
         </div>
 

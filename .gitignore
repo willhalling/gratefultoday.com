@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/functions/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -42,6 +43,7 @@ next-env.d.ts
 
 grateful-today-761f2-firebase-adminsdk-d6vff-8ea2490790.json
 *.json
+!content/daily-reflections.json
 grateful-today-*-firebase-adminsdk-*.json
 .env
 .env.local

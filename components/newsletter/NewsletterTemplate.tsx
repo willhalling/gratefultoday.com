@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface NewsletterContent {
   title: string;
@@ -23,6 +23,9 @@ export function NewsletterTemplate({ content }: NewsletterTemplateProps) {
         {/* Header */}
         <div className="p-8 md:p-12 border-b border-neutral-200">
           <p className="text-sm text-neutral-500 mb-2">{content.date}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700 mb-3">
+            One day. One thing.
+          </p>
           <h1 className="text-3xl md:text-4xl font-bold text-neutral-900">
             {content.title}
           </h1>
@@ -36,13 +39,21 @@ export function NewsletterTemplate({ content }: NewsletterTemplateProps) {
         {/* Main Content */}
         <div className="px-8 md:px-12">
           {content.mainContent.map((paragraph, index) => (
-            <p key={index} className="text-neutral-800 leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: paragraph.split('\n').join('<br>') }} />
+            <p
+              key={index}
+              className="text-neutral-800 leading-relaxed mb-4"
+              dangerouslySetInnerHTML={{
+                __html: paragraph.split("\n").join("<br>"),
+              }}
+            />
           ))}
         </div>
 
         {/* Signature */}
         <div className="px-8 md:px-12">
-          <p className="text-neutral-800 leading-relaxed mb-4">— {content.closingThought}</p>
+          <p className="text-neutral-800 leading-relaxed mb-4">
+            — {content.closingThought}
+          </p>
         </div>
 
         {/* Call to Action */}
@@ -58,17 +69,28 @@ export function NewsletterTemplate({ content }: NewsletterTemplateProps) {
         <div className="px-8 md:px-12 pb-8 md:pb-12">
           <ul className="space-y-1 text-base leading-relaxed">
             <li>
-              <a href="https://iam.gratefultoday.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                Share Gratitude
+              <a
+                href="https://gratefultoday.com/wall"
+                className="text-primary hover:underline"
+              >
+                Gratitude Wall
               </a>
             </li>
             <li>
-              <a href="https://gratefultoday.com" className="text-neutral-600 hover:underline">
-                Grateful Today Homepage
+              <a
+                href="https://gratefultoday.com"
+                className="text-neutral-600 hover:underline"
+              >
+                Today at Grateful Today
               </a>
             </li>
             <li>
-              <a href="https://www.youtube.com/@GratefulToday" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:underline">
+              <a
+                href="https://www.youtube.com/@GratefulToday"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-600 hover:underline"
+              >
                 YouTube
               </a>
             </li>
@@ -77,9 +99,13 @@ export function NewsletterTemplate({ content }: NewsletterTemplateProps) {
 
         {/* Footer */}
         <div className="px-8 md:px-12 py-5 bg-neutral-50 rounded-b-lg">
-          <p className="text-center text-xs text-neutral-600 mb-2">GratefulToday</p>
+          <p className="text-center text-xs text-neutral-600 mb-2">
+            GratefulToday
+          </p>
           <p className="text-center text-xs text-neutral-400">
-            <a href="#" className="text-neutral-600 underline">Unsubscribe</a>
+            <a href="#" className="text-neutral-600 underline">
+              Unsubscribe
+            </a>
           </p>
         </div>
       </div>

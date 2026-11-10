@@ -4,6 +4,7 @@ import { Button } from '@heroui/react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import React from 'react';
+import DailyQuote from './daily-quote';
 // import { TodayStats } from './stats/TodayStats';
 
 interface HeroHomeProps {
@@ -78,7 +79,7 @@ export default function HeroHome({ position = 'center-left' }: HeroHomeProps) {
             start grateful today
           </motion.h1>
           <motion.p
-            className="text-lg md:text-xl text-white mb-8 drop-shadow-lg"
+            className="text-lg md:text-xl text-white mb-6 md:mb-8 drop-shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
@@ -87,7 +88,7 @@ export default function HeroHome({ position = 'center-left' }: HeroHomeProps) {
             anonymously with people who get it
           </motion.p>
           <motion.div
-            className={`flex flex-col sm:flex-row gap-4 ${buttonAlignClasses[position]}`}
+            className={`flex flex-row gap-3 sm:gap-4 ${buttonAlignClasses[position]}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
@@ -96,7 +97,7 @@ export default function HeroHome({ position = 'center-left' }: HeroHomeProps) {
               as={Link}
               href="/newsletter"
               size="lg"
-              className="bg-secondary hover:bg-secondary-600 text-neutral-900 text-lg px-8 py-4 font-semibold shadow-xl"
+              className="bg-secondary hover:bg-secondary-600 text-neutral-900 text-lg flex-1 sm:flex-none px-4 sm:px-8 py-4 font-semibold shadow-xl"
               radius="full"
             >
               Start Here
@@ -106,12 +107,13 @@ export default function HeroHome({ position = 'center-left' }: HeroHomeProps) {
               href="/sobriety-chips"
               variant="bordered"
               size="lg"
-              className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-neutral-900 text-lg px-8 py-4 shadow-xl"
+              className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-neutral-900 text-lg flex-1 sm:flex-none px-4 sm:px-8 py-4 shadow-xl"
               radius="full"
             >
               Sobriety Chips
             </Button>
           </motion.div>
+          <DailyQuote className="mt-6 md:mt-8" />
         </motion.div>
       </div>
     </div>

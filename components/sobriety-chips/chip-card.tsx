@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Chip from './chip';
 
 interface ChipData {
   id: string;
@@ -20,33 +19,28 @@ interface ChipData {
 
 interface ChipCardProps {
   chipData: ChipData;
-  index: number;
 }
 
-export default function ChipCard({ chipData, index }: ChipCardProps) {
+export default function ChipCard({ chipData }: ChipCardProps) {
   return (
     <Link
       href={`/sobriety-chips/${chipData.id}`}
-      className="group bg-white hover:bg-neutral-50 p-4 rounded-xl border border-neutral-200 hover:border-primary hover:shadow-lg transition-all duration-200"
+      className="group block overflow-hidden rounded-xl border border-neutral-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-xl"
+      aria-label={`Open the ${chipData.title} story`}
     >
-      <div className="max-w-xs mx-auto text-center">
-        {/* Chip Component */}
-        <div className="mb-3">
-          <Chip 
-            chipData={chipData}
-            index={index}
-          />
-        </div>
-
-        {/* Milestone title */}
-        <div className="text-center">
-          <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-primary transition-colors">
-            {chipData.chipNumber} {chipData.chipText}
-          </h3>
-          <p className="text-xs text-neutral-600 mt-1">
-            {chipData.title}
-          </p>
-        </div>
+      <div className="relative aspect-[9/16] overflow-hidden bg-neutral-950">
+        <img
+          src={`/sobriety-previews/${chipData.id}.jpg`}
+          alt={`${chipData.title} story preview`}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        />
+      </div>
+      <div className="p-4 text-center">
+        <h3 className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-primary">
+          {chipData.chipNumber} {chipData.chipText}
+        </h3>
+        <p className="mt-1 text-xs leading-relaxed text-neutral-600">{chipData.title}</p>
       </div>
     </Link>
   );

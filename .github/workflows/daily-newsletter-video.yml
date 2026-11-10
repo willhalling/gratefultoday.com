@@ -1,0 +1,30 @@
+name: Daily newsletter video
+
+on:
+  schedule:
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+      - run: |
+          yarn start --port 3000 &
+          sleep 10
+          node scripts/generate-newsletter-video.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          NEWSLETTER_VIDEO_BASE_URL: http://localhost:3000

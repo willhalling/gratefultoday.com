@@ -6,10 +6,10 @@ type FirebaseWebConfig = {
 };
 
 const config: FirebaseWebConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+  apiKey: 'AIzaSyCeDedJ35qosn8rmRkjdjE34-X4Z0MuNeo',
+  authDomain: 'grateful-today-761f2.firebaseapp.com',
+  projectId: 'grateful-today-761f2',
+  storageBucket: 'grateful-today-761f2.appspot.com',
 };
 
 export function getFirebaseConfig(): FirebaseWebConfig {

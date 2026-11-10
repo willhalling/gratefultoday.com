@@ -7,47 +7,47 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   serverExternalPackages: [
-    '@remotion/bundler',
-    '@remotion/renderer',
-    '@rspack/core',
-    '@rspack/binding',
-    'esbuild',
+    "@remotion/bundler",
+    "@remotion/renderer",
+    "@rspack/core",
+    "@rspack/binding",
+    "esbuild",
   ],
   // Keep config minimal like slowedgenerator; rely on workspace resolution
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
+        protocol: "https",
+        hostname: "via.placeholder.com",
       },
       {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
       },
       {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
+        protocol: "https",
+        hostname: "storage.googleapis.com",
       },
       {
-        protocol: 'https',
-        hostname: 'funeralcollage.com',
+        protocol: "https",
+        hostname: "funeralcollage.com",
       },
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
       {
-        protocol: 'https',
-        hostname: 'v3.fal.media',
+        protocol: "https",
+        hostname: "v3.fal.media",
       },
       {
-        protocol: 'https',
-        hostname: 'staging.funeralcollage.com',
+        protocol: "https",
+        hostname: "staging.funeralcollage.com",
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
       },
     ],
     disableStaticImages: false,
@@ -55,8 +55,13 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/quotes.html',
-        destination: '/quotes',
+        source: "/quotes",
+        destination: "/wall",
+        permanent: true,
+      },
+      {
+        source: "/quotes.html",
+        destination: "/wall",
         permanent: true,
       },
     ];

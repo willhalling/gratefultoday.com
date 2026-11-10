@@ -1,4 +1,16 @@
-export const OVERLAY_OPTIONS = [
+export type OverlayEffect = 'none' | 'grain' | 'sparkles' | 'dust' | 'snow' | 'vignette';
+export type OverlayCharacter = 'texture' | 'organic' | 'sparkle' | 'framing';
+
+export const OVERLAY_OPTIONS: {
+  key: OverlayEffect;
+  label: string;
+  description: string;
+  file: string | null;
+  opacity: number;
+  mixBlendMode: string;
+  filter: string;
+  character?: OverlayCharacter;
+}[] = [
   {
     key: 'none',
     label: 'No Overlay',
@@ -16,6 +28,7 @@ export const OVERLAY_OPTIONS = [
     opacity: 0.7,
     mixBlendMode: 'overlay',
     filter: '',
+    character: 'texture',
   },
   {
     key: 'sparkles',
@@ -25,17 +38,39 @@ export const OVERLAY_OPTIONS = [
     opacity: 0.4,
     mixBlendMode: 'screen',
     filter: 'brightness(1.2) contrast(1.1)',
+    character: 'sparkle',
   },
-  // {
-  //   key: 'fog',
-  //   label: 'Fog',
-  //   description: 'Soft fog overlay for atmospheric mood',
-  //   file: '/backgrounds/fog.webm',
-  //   opacity: 0.5,
-  //   mixBlendMode: 'soft-light',
-  //   filter: 'blur(1px)',
-  // },
-] as const;
+  {
+    key: 'dust',
+    label: 'Dust',
+    description: 'Soft floating particles for a quiet, organic mood',
+    file: null,
+    opacity: 0,
+    mixBlendMode: 'normal',
+    filter: '',
+    character: 'organic',
+  },
+  {
+    key: 'snow',
+    label: 'Snow',
+    description: 'Gentle falling snow for a wintry mood',
+    file: null,
+    opacity: 0,
+    mixBlendMode: 'normal',
+    filter: '',
+    character: 'organic',
+  },
+  {
+    key: 'vignette',
+    label: 'Vignette',
+    description: 'Darkens the edges to keep text and wave readable',
+    file: null,
+    opacity: 0,
+    mixBlendMode: 'normal',
+    filter: '',
+    character: 'framing',
+  },
+];
 
 export interface OverlayConfig {
   file: string | null;
@@ -55,4 +90,8 @@ export function getOverlayConfig(key: string): OverlayConfig {
     mixBlendMode: option.mixBlendMode,
     filter: option.filter,
   };
+}
+
+export function getOverlayConfigs(keys: OverlayEffect[]): OverlayConfig[] {
+  return keys.filter((k) => k !== 'none').map((k) => getOverlayConfig(k));
 }

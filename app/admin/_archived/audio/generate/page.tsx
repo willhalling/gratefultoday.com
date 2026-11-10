@@ -4,6 +4,7 @@ import { Card, CardBody, Button, Input, Slider, Select, SelectItem, Textarea } f
 import { Music, Download, Play, Pause } from 'lucide-react';
 import { useState } from 'react';
 import AdminGuard from '@/components/AdminGuard';
+import { authHeaders } from '@/lib/tiktok-maker/bulk';
 
 // Popular ElevenLabs voices
 const VOICES = [
@@ -83,7 +84,7 @@ export default function AudioGeneratorPage() {
     try {
       const response = await fetch('/api/audio/elevenlabs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({
           text,
           voiceId,

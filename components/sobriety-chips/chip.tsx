@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 interface ChipData {
   id?: string;
@@ -18,11 +18,12 @@ interface ChipData {
 interface ChipProps {
   chipData?: ChipData;
   index?: number;
+  recipientName?: string;
 }
 
 const DEFAULT_CHIP: ChipData = {
   chipNumber: 24,
-  chipText: 'HOURS',
+  chipText: "HOURS",
   chipNumberX: 56,
   chipNumberY: 76,
   chipTextX: 58,
@@ -32,14 +33,15 @@ const DEFAULT_CHIP: ChipData = {
 export default function Chip({
   chipData = DEFAULT_CHIP,
   index = 0,
+  recipientName = "",
 }: ChipProps) {
-  const type = chipData.id || chipData.type || 'hour';
-  const chipColor = chipData.chipColor || '#22C55E';
-  
+  const type = chipData.id || chipData.type || "hour";
+  const chipColor = chipData.chipColor || "#22C55E";
+
   return (
-    <div style={{ '--chip-color': chipColor } as React.CSSProperties}>
+    <div style={{ "--chip-color": chipColor } as React.CSSProperties}>
       <svg
-        className='chip-snapshot'
+        className="chip-snapshot"
         xmlns="http://www.w3.org/2000/svg"
         x="0px"
         y="0px"
@@ -71,6 +73,18 @@ export default function Chip({
               >
                 {chipData.chipText}
               </text>
+              {recipientName.trim() && (
+                <text
+                  x={chipData.chipTextX}
+                  y={chipData.chipTextY + 7}
+                  className="small"
+                  fontSize="5.5"
+                  fontWeight="bold"
+                  fontFamily="Lucida Grande"
+                >
+                  {recipientName.trim()}
+                </text>
+              )}
             </mask>
           </defs>
           <defs>
