@@ -7,6 +7,7 @@ import {
   RECOVERY_MILESTONES,
   VIDEO_LENGTH,
   formatPrice,
+  isFree,
 } from '@/lib/product';
 
 const SAMPLE_LINES = [
@@ -36,6 +37,14 @@ const STEPS = [
 ];
 
 const FAQS = [
+  ...(isFree()
+    ? [
+        {
+          q: 'Is it really free?',
+          a: 'Yes, while we’re launching. No card, no account. We just ask for an email address so we can send you the video.',
+        },
+      ]
+    : []),
   {
     q: 'How long is the video?',
     a: `${VIDEO_LENGTH}. Long enough to say something real, short enough to watch again.`,
@@ -109,7 +118,7 @@ export default function HomePage() {
                 Make your video
               </Link>
               <p className="text-sm text-muted">
-                {formatPrice()} · ready in minutes · no account needed
+                {isFree() ? 'Free while we launch' : formatPrice()} · ready in minutes · no account needed
               </p>
             </div>
           </div>
@@ -181,10 +190,13 @@ export default function HomePage() {
         <section className="bg-pine text-cream">
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:px-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-3xl font-semibold md:text-4xl">One video, one price.</h2>
+              <h2 className="text-3xl font-semibold md:text-4xl">
+                {isFree() ? 'Free while we launch.' : 'One video, one price.'}
+              </h2>
               <p className="mt-3 max-w-xl text-cream/80">
-                {formatPrice()} for a {VIDEO_LENGTH} narrated video, a private link to share, and an MP4 to keep.
-                No subscription.
+                {isFree()
+                  ? `Make a ${VIDEO_LENGTH} narrated video, with a private link to share and an MP4 to keep. No card, no account.`
+                  : `${formatPrice()} for a ${VIDEO_LENGTH} narrated video, a private link to share, and an MP4 to keep. No subscription.`}
               </p>
             </div>
             <Link

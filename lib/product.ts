@@ -6,10 +6,19 @@
 
 export const PRODUCT_NAME = 'Thank-you video';
 
-/** Price in pence (GBP). */
-export const PRICE_PENCE = 799;
+/**
+ * Free while the idea is validated. When Stripe is added, set a price here
+ * and the landing page switches from "free" copy to the price.
+ */
+export const PRICE_PENCE: number | null = null;
 
-export const formatPrice = (pence = PRICE_PENCE): string => `£${(pence / 100).toFixed(2).replace(/\.00$/, '')}`;
+export const isFree = () => PRICE_PENCE === null;
+
+export const formatPrice = (pence = PRICE_PENCE): string =>
+  pence === null ? 'Free' : `£${(pence / 100).toFixed(2).replace(/\.00$/, '')}`;
+
+/** Free videos per email address per day, to keep narration and render costs in check. */
+export const FREE_VIDEOS_PER_EMAIL_PER_DAY = 3;
 
 /** Last day to order for Christmas delivery. After this, the New Year version. */
 export const LAST_CHRISTMAS_ORDER = '20 December';
