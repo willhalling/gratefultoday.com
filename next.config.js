@@ -29,6 +29,11 @@ const OLD_SECTIONS = [
 ];
 
 const nextConfig = {
+  // The advisor reads the knowledge base at runtime, so ship it with its routes.
+  outputFileTracingIncludes: {
+    '/api/advisor': ['./knowledge/chunks.jsonl'],
+    '/api/advisor/saved': ['./knowledge/chunks.jsonl'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
