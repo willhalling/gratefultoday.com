@@ -46,3 +46,6 @@ grateful-today-*-firebase-adminsdk-*.json
 .env
 .env.local
 grateful-today-*-firebase-adminsdk-*.json
+
+# Knowledge base manifests
+!knowledge/**/*.json
