@@ -7,10 +7,54 @@ reference material for future Grateful Today content. ~2.7M words across 32 work
   header, footer and license text have been removed.
 - `manifest.json` lists every work's title, author, translator, word count, source URL
   and any `rightsNote`.
-- Regenerate with `NODE_USE_ENV_PROXY=1 node scripts/fetch-knowledge.js`
-  (drop `NODE_USE_ENV_PROXY=1` if you're not behind a proxy). Pass folder names to
-  refresh only some authors, e.g. `node scripts/fetch-knowledge.js seneca emerson`.
-  To add a work, add its Gutenberg ID to `SOURCES` in the script.
+- Re-download with `npm run knowledge:fetch` (behind a proxy:
+  `NODE_USE_ENV_PROXY=1 node scripts/fetch-knowledge.js`). Pass folder names to refresh
+  only some authors, e.g. `node scripts/fetch-knowledge.js seneca emerson`. To add a
+  work, add its Gutenberg ID to `SOURCES` in the script, then rerun `npm run knowledge:chunk`.
+
+## Chunks for AI search (`chunks.jsonl`)
+
+`chunks.jsonl` holds every work split into ~11.5k small passages, one JSON object per
+line, ready for embedding and search. Each chunk carries its own citation:
+
+```json
+{
+  "id": "marcus-aurelius/meditations-long#0106",
+  "author": "Marcus Aurelius",
+  "work": "Meditations",
+  "translator": "George Long",
+  "location": "Book I, §14",
+  "speaker": "author",
+  "words": 157,
+  "text": "From my brother Severus, to love my kin, and to love truth, ...",
+  "file": "marcus-aurelius/meditations-long.txt",
+  "source": "https://www.gutenberg.org/ebooks/15877"
+}
+```
+
+How the texts are split:
+
+- **By structure first.** Book, chapter, essay, lecture and numbered section headings
+  become the `location`. Aphorism books (Meditations, Enchiridion, Dhammapada,
+  Tao Te Ching, Counsels and Maxims) are split on their numbered sections, and
+  neighbouring short ones are grouped up to ~200 words (e.g. `Chapter V. The Fool, v. 60–66`).
+- **Then by paragraph.** Within a section, whole paragraphs are packed into chunks of
+  150–350 words (median ~230). A short paragraph is repeated at the start of the next
+  chunk for context. Paragraphs over 350 words are split at sentence boundaries.
+- **Clutter removed.** Title pages, tables of contents, indexes, footnotes, footnote
+  markers, page numbers and transcriber/editor notes are dropped, and italics
+  markup (`_word_`) is removed.
+- **`speaker: "commentary"`** marks translators' and editors' prefaces, introductions,
+  biographical sketches and summaries, so they're never attributed to the author.
+  Filter on `speaker === "author"` when looking for quotes.
+
+Rebuild after changing texts or splitting rules with `npm run knowledge:chunk`. Per-work
+settings (where the text starts, heading quirks, citation titles) are at the top of
+`scripts/chunk-knowledge.js`. `node scripts/chunk-knowledge.js --report [folder]` prints
+the sections found in each work, so you can check the splitting.
+
+When showing quotes to users, check that the quoted words appear verbatim in the cited
+chunk's `text` before displaying them, so the AI can't paraphrase or invent a quote.
 
 ## Best places to start
 

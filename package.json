@@ -10,6 +10,8 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "knowledge:fetch": "node scripts/fetch-knowledge.js",
+    "knowledge:chunk": "node scripts/chunk-knowledge.js",
     "updateLambdaSite": "npx remotion lambda sites create remotion/index.tsx --site-name=grateful-today",
     "updateLambdaFn": "npx remotion lambda functions deploy --memory=10240 --disk=10240 --timeout=900",
     "test:newsletter": "curl -X POST https://testnewsletterhttp-yo2skstedq-uc.a.run.app -H 'Content-Type: application/json' -d '{\"email\":\"willhalling@gmail.com\",\"frequency\":\"daily\"}'"
