@@ -9,7 +9,9 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "knowledge:fetch": "node scripts/fetch-knowledge.js",
+    "knowledge:chunk": "node scripts/chunk-knowledge.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",

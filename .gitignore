@@ -54,3 +54,6 @@ grateful-today-*-firebase-adminsdk-*.json
 
 # old test renders
 /e2e-output/
+
+# Knowledge base manifests
+!knowledge/**/*.json
