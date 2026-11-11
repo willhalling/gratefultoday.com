@@ -1,6 +1,8 @@
+import type { Mode } from '@/lib/advisor/types';
+
 /**
- * Example prompts shown on the welcome screen and above the composer.
- * Tapping one puts its text in the composer (and switches voice if `voice` is set),
+ * Example prompts shown on the welcome screen, in the Ideas sheet and above the composer.
+ * Tapping one puts its text in the composer (and switches voice or mode if set),
  * so it can be finished or edited before sending. Edit freely.
  */
 export interface Suggestion {
@@ -10,6 +12,8 @@ export interface Suggestion {
   text: string;
   /** Voice id from lib/advisor/voices.ts to switch to, if any. */
   voice?: string;
+  /** Mode to switch to: a journal reflection (default) or a video script. */
+  mode?: Mode;
 }
 
 export interface SuggestionGroup {
@@ -69,8 +73,40 @@ export const SUGGESTION_GROUPS: SuggestionGroup[] = [
   },
 ];
 
-/** A few for the quick row above the composer. */
-export const QUICK_SUGGESTIONS: Suggestion[] = [
+/** Ideas for video scripts, shown when a video mode is chosen. */
+export const VIDEO_GROUPS: SuggestionGroup[] = [
+  {
+    title: 'Short videos',
+    hint: 'A 30–60 second script with three hooks to test, for TikTok, Reels or Shorts.',
+    items: [
+      { label: 'Gratitude when life is hard', text: 'Why gratitude matters most on the days it feels impossible', mode: 'short' },
+      { label: 'The first 90 days', text: 'What nobody tells you about the first 90 days of recovery', mode: 'short' },
+      { label: 'What’s in your control', text: 'The one question that stops spiralling: is this in my control?', mode: 'short', voice: 'stoic' },
+      { label: 'Marcus Aurelius’ morning', text: 'How Marcus Aurelius started every morning, and how to steal it', mode: 'short', voice: 'marcus-aurelius' },
+      { label: 'Seneca on wasted time', text: 'Seneca on why life feels short: we waste it', mode: 'short', voice: 'seneca' },
+      { label: 'Cravings pass', text: 'A craving is a wave, not a command', mode: 'short' },
+    ],
+  },
+  {
+    title: 'YouTube videos',
+    hint: 'A full 8–12 minute script with titles, thumbnail text, chapters and description.',
+    items: [
+      { label: 'Stoicism for recovery', text: 'Stoicism for people in recovery: five ideas that actually help', mode: 'youtube', voice: 'stoic' },
+      { label: 'The science of gratitude', text: 'What William James knew about habit and gratitude that we forgot', mode: 'youtube' },
+      { label: 'Ancient advice on anger', text: 'How to stop being so angry, according to Seneca', mode: 'youtube', voice: 'seneca' },
+      { label: 'Living simply', text: 'What Thoreau learned at Walden about wanting less', mode: 'youtube', voice: 'thoreau' },
+    ],
+  },
+];
+
+/** A few for the quick row above the composer, per mode. */
+export function quickSuggestions(mode: Mode): Suggestion[] {
+  if (mode === 'short') return VIDEO_GROUPS[0].items;
+  if (mode === 'youtube') return VIDEO_GROUPS[1].items;
+  return QUICK_SUGGESTIONS;
+}
+
+const QUICK_SUGGESTIONS: Suggestion[] = [
   SUGGESTION_GROUPS[0].items[0],
   SUGGESTION_GROUPS[1].items[2],
   SUGGESTION_GROUPS[2].items[0],

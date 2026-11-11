@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { firestoreAuth } from '@/firebase/firebase-config';
-import { QUICK_SUGGESTIONS, SUGGESTION_GROUPS, type Suggestion } from './suggestions';
+import type { Entry, Mode, Passage, SavedPassage as Saved, ShortScript, YouTubeScript } from '@/lib/advisor/types';
+import { quickSuggestions, SUGGESTION_GROUPS, VIDEO_GROUPS, type Suggestion } from './suggestions';
 
 // ---------------------------------------------------------------------------
 // Types and API
@@ -12,30 +13,10 @@ interface Voice {
   label: string;
   description: string;
 }
-interface Passage {
-  chunkId: string;
-  quote: string;
-  why: string;
-  author: string;
-  work: string;
-  translator: string | null;
-  location: string | null;
-  source: string;
-}
-interface Entry {
-  id: string;
-  entry: string;
-  voice: string;
-  reply: { opening: string; passages: Passage[]; closing: string };
-  createdAt: string;
-}
-interface Saved extends Passage {
-  note: string;
-  savedAt: string;
-}
 interface Pending {
   entry: string;
   voice: string;
+  mode: Mode;
   /** Passages found by meaning, before writing starts (fast path). */
   found: number | null;
   /** Keyword searches the advisor ran (fallback path). */
@@ -64,9 +45,10 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 async function askAdvisor(
   entry: string,
   voice: string,
+  mode: Mode,
   onProgress: (event: ProgressEvent) => void,
-): Promise<{ entry: Entry; notes: string[] }> {
-  const res = await fetch('/api/advisor', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ entry, voice }) });
+): Promise<{ entry: Entry; notes?: string[] }> {
+  const res = await fetch('/api/advisor', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ entry, voice, mode }) });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Request failed (${res.status})`);
@@ -107,6 +89,15 @@ const store = {
   },
 };
 const VOICE_KEY = 'advisor.voice';
+const MODE_KEY = 'advisor.mode';
+
+/** The modes, as the switch above the composer shows them. */
+const MODES: { id: Mode; label: string; placeholder: string }[] = [
+  { id: 'reflect', label: 'Reflect', placeholder: 'What’s on your mind?' },
+  { id: 'short', label: 'TikTok / Shorts', placeholder: 'Topic for a short video…' },
+  { id: 'youtube', label: 'YouTube', placeholder: 'Topic for a YouTube video…' },
+];
+const isMode = (m: string | null): m is Mode => MODES.some((x) => x.id === m);
 const DRAFT_KEY = 'advisor.draft';
 
 // ---------------------------------------------------------------------------
@@ -116,6 +107,7 @@ export default function AdvisorApp() {
   const [tab, setTab] = useState<Tab>('journal');
   const [voices, setVoices] = useState<Voice[]>([]);
   const [voice, setVoice] = useState('advisor');
+  const [mode, setMode] = useState<Mode>('reflect');
   const [entries, setEntries] = useState<Entry[]>([]); // oldest first
   const [notes, setNotes] = useState<string[]>([]);
   const [saved, setSaved] = useState<Saved[]>([]);
@@ -131,6 +123,8 @@ export default function AdvisorApp() {
 
   useEffect(() => {
     setDraft(store.get(DRAFT_KEY) ?? '');
+    const storedMode = store.get(MODE_KEY);
+    if (isMode(storedMode)) setMode(storedMode);
     api<{ voices: Voice[]; defaultVoice: string; entries: Entry[]; notes: string[]; saved: Saved[] }>('/api/advisor')
       .then((d) => {
         setVoices(d.voices);
@@ -161,6 +155,11 @@ export default function AdvisorApp() {
     store.set(VOICE_KEY, id);
   };
 
+  const chooseMode = (m: Mode) => {
+    setMode(m);
+    store.set(MODE_KEY, m);
+  };
+
   const updateDraft = (text: string) => {
     setDraft(text);
     store.set(DRAFT_KEY, text);
@@ -168,6 +167,7 @@ export default function AdvisorApp() {
 
   const useSuggestion = (s: Suggestion) => {
     if (s.voice && voices.some((v) => v.id === s.voice)) chooseVoice(s.voice);
+    chooseMode(s.mode ?? 'reflect');
     updateDraft(s.text);
     setBrowse(false);
     setTab('journal');
@@ -183,13 +183,13 @@ export default function AdvisorApp() {
     const text = draft.trim();
     if (!text || pending) return;
     setProblem(null);
-    setPending({ entry: text, voice, found: null, searches: [], opening: '' });
+    setPending({ entry: text, voice, mode, found: null, searches: [], opening: '' });
     updateDraft('');
     composer.current?.blur();
     scrollToEnd();
     try {
       let started = false;
-      const r = await askAdvisor(text, voice, (event) => {
+      const r = await askAdvisor(text, voice, mode, (event) => {
         setPending((p) => {
           if (!p) return p;
           if (event.type === 'retrieved') return { ...p, found: event.found };
@@ -201,7 +201,7 @@ export default function AdvisorApp() {
         if (event.type === 'opening') started = true;
       });
       setEntries((e) => [...e, r.entry]);
-      setNotes(r.notes);
+      if (r.notes) setNotes(r.notes);
       scrollToEnd();
     } catch (e) {
       setProblem((e as Error).message);
@@ -275,7 +275,11 @@ export default function AdvisorApp() {
                   onClick={() => setVoiceSheet(true)}
                   className="flex h-9 items-center gap-1.5 rounded-full border border-line bg-cream/60 pl-3 pr-2.5 text-sm text-ink active:bg-cream"
                 >
-                  <span className="max-w-36 truncate">{currentVoice?.label ?? 'Voice'}</span>
+                  <span className="max-w-40 truncate">
+                    {mode === 'reflect'
+                      ? currentVoice?.label ?? 'Voice'
+                      : `From: ${!currentVoice || currentVoice.id === 'advisor' ? 'all writers' : currentVoice.label}`}
+                  </span>
                   <ChevronIcon />
                 </button>
               </div>
@@ -327,10 +331,16 @@ export default function AdvisorApp() {
             onDraft={updateDraft}
             onSend={send}
             busy={!!pending}
-            showQuick={!draft && !empty && !pending}
+            showQuick={!draft && (!empty || mode !== 'reflect') && !pending}
             onPick={useSuggestion}
             onMore={() => setBrowse(true)}
-            placeholder={currentVoice && currentVoice.id !== 'advisor' ? `Write to ${currentVoice.label}…` : 'What’s on your mind?'}
+            mode={mode}
+            onMode={chooseMode}
+            placeholder={
+              mode === 'reflect' && currentVoice && currentVoice.id !== 'advisor'
+                ? `Write to ${currentVoice.label}…`
+                : MODES.find((m) => m.id === mode)!.placeholder
+            }
           />
         )}
 
@@ -350,7 +360,7 @@ export default function AdvisorApp() {
         </nav>
 
         {voiceSheet && (
-          <Sheet title="Choose a voice" onClose={() => setVoiceSheet(false)}>
+          <Sheet title={mode === 'reflect' ? 'Choose a voice' : 'Quote from…'} onClose={() => setVoiceSheet(false)}>
             <ul className="divide-y divide-line">
               {voices.map((v) => (
                 <li key={v.id}>
@@ -376,7 +386,7 @@ export default function AdvisorApp() {
         {browse && (
           <Sheet title="Things you can ask" onClose={() => setBrowse(false)}>
             <div className="px-5 pb-4">
-              <SuggestionGroups onPick={useSuggestion} />
+              <SuggestionGroups groups={mode === 'reflect' ? [...SUGGESTION_GROUPS, ...VIDEO_GROUPS] : [...VIDEO_GROUPS, ...SUGGESTION_GROUPS]} onPick={useSuggestion} />
             </div>
           </Sheet>
         )}
@@ -406,17 +416,21 @@ function Welcome({ onPick }: { onPick: (s: Suggestion) => void }) {
         <li className="flex gap-2">
           <span className="text-gold">✦</span> Tap the bookmark on any quote to keep it in Saved.
         </li>
+        <li className="flex gap-2">
+          <span className="text-gold">✦</span> Making videos? Switch to TikTok / Shorts or YouTube above the box below,
+          and it writes a script with hooks around a real quote.
+        </li>
       </ul>
       <p className="mb-3 mt-8 text-xs font-medium uppercase tracking-wider text-muted">Try one of these</p>
-      <SuggestionGroups onPick={onPick} />
+      <SuggestionGroups groups={[...SUGGESTION_GROUPS, ...VIDEO_GROUPS]} onPick={onPick} />
     </div>
   );
 }
 
-function SuggestionGroups({ onPick }: { onPick: (s: Suggestion) => void }) {
+function SuggestionGroups({ groups, onPick }: { groups: typeof SUGGESTION_GROUPS; onPick: (s: Suggestion) => void }) {
   return (
     <div className="space-y-6">
-      {SUGGESTION_GROUPS.map((g) => (
+      {groups.map((g) => (
         <section key={g.title}>
           <h3 className="font-serif text-lg font-semibold text-pine">{g.title}</h3>
           <p className="mb-2.5 text-sm text-muted">{g.hint}</p>
@@ -475,15 +489,17 @@ function Thread({
         return (
           <div key={e.id} className="space-y-5">
             {showDay && <DaySeparator label={day} />}
-            <YourEntry text={e.entry} />
-            <Reply entry={e} voiceLabel={voiceLabel(e.voice)} isSaved={isSaved} onToggleSave={onToggleSave} />
+            <YourEntry text={e.entry} mode={e.mode ?? 'reflect'} />
+            {e.reply && <Reply entry={e} voiceLabel={voiceLabel(e.voice)} isSaved={isSaved} onToggleSave={onToggleSave} />}
+            {e.script?.kind === 'short' && <ShortScriptView script={e.script} isSaved={isSaved} onToggleSave={onToggleSave} />}
+            {e.script?.kind === 'youtube' && <YouTubeScriptView script={e.script} isSaved={isSaved} onToggleSave={onToggleSave} />}
           </div>
         );
       })}
       {pending && (
         <div className="space-y-5">
           {lastDay !== 'Today' && <DaySeparator label="Today" />}
-          <YourEntry text={pending.entry} />
+          <YourEntry text={pending.entry} mode={pending.mode} />
           <Thinking voiceLabel={voiceLabel(pending.voice)} pending={pending} />
         </div>
       )}
@@ -501,9 +517,14 @@ function DaySeparator({ label }: { label: string }) {
   );
 }
 
-function YourEntry({ text }: { text: string }) {
+function YourEntry({ text, mode }: { text: string; mode: Mode }) {
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-col items-end gap-1">
+      {mode !== 'reflect' && (
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
+          {mode === 'short' ? 'Short video script' : 'YouTube script'}
+        </span>
+      )}
       <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-pine px-4 py-3 text-[15px] leading-relaxed text-paper">
         {text}
       </p>
@@ -522,7 +543,7 @@ function Reply({
   isSaved: (id: string) => boolean;
   onToggleSave: (p: Passage) => void;
 }) {
-  const { opening, passages, closing } = entry.reply;
+  const { opening, passages, closing } = entry.reply!;
   return (
     <div className="space-y-4">
       <p className="text-xs font-medium uppercase tracking-wider text-gold">{voiceLabel}</p>
@@ -538,7 +559,34 @@ function Reply({
 }
 
 function Thinking({ voiceLabel, pending }: { voiceLabel: string; pending: Pending }) {
-  const { found, searches, opening } = pending;
+  const { found, searches, opening, mode } = pending;
+  if (mode !== 'reflect') {
+    return (
+      <div className="rounded-2xl border border-line bg-cream/50 px-4 py-3.5 text-sm text-muted">
+        <ul className="space-y-2">
+          {found !== null && (
+            <li className="flex gap-2">
+              <span className="text-pine">✓</span>
+              <span>Found {found} passages to build it around</span>
+            </li>
+          )}
+          {opening && (
+            <li className="flex gap-2">
+              <span className="text-pine">✓</span>
+              <span>
+                {mode === 'short' ? 'Working title: ' : 'Hook: '}
+                <span className="italic text-ink">{opening}</span>
+              </span>
+            </li>
+          )}
+          <li className="flex items-center gap-2">
+            <Dots />
+            <span>{mode === 'short' ? 'Writing hooks, beats and caption…' : 'Writing the script, titles and chapters… (about a minute)'}</span>
+          </li>
+        </ul>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4">
       <p className="text-xs font-medium uppercase tracking-wider text-gold">{voiceLabel}</p>
@@ -621,6 +669,228 @@ function PassageCard({ passage: p, saved, onToggleSave }: { passage: Passage; sa
 }
 
 // ---------------------------------------------------------------------------
+// Video scripts
+
+function cite(p: Passage) {
+  return `${p.author}, ${p.work}${p.location ? `, ${p.location}` : ''}${p.translator ? ` (trans. ${p.translator})` : ''}`;
+}
+
+/** The whole script as plain text, for pasting into notes or a teleprompter. */
+function scriptToText(s: ShortScript | YouTubeScript): string {
+  const sources = s.passages.length ? `\n\nSOURCES\n${s.passages.map((p) => `“${p.quote}” — ${cite(p)}`).join('\n')}` : '';
+  if (s.kind === 'short') {
+    return [
+      s.title.toUpperCase(),
+      `HOOKS TO TEST\n${s.hooks.map((h, i) => `${i + 1}. ${h.text}  (${h.style})`).join('\n')}`,
+      `SCRIPT\n${s.beats.map((b, i) => `${i + 1}. ${b.voiceover}\n   On screen: ${b.onScreen}\n   Visual: ${b.visual}`).join('\n')}`,
+      `CTA\n${s.cta}`,
+      `CAPTION\n${s.caption}\n\n${s.hashtags.map((h) => `#${h}`).join(' ')}`,
+    ].join('\n\n') + sources;
+  }
+  return [
+    `TITLE OPTIONS\n${s.titles.map((t) => `- ${t}`).join('\n')}`,
+    `THUMBNAIL TEXT\n${s.thumbnailText.map((t) => `- ${t}`).join('\n')}`,
+    `HOOK\n${s.hook}`,
+    ...s.sections.map((x) => `${x.heading.toUpperCase()}\n${x.voiceover}\n[On screen: ${x.onScreen}]`),
+    `OUTRO\n${s.outro}`,
+    `DESCRIPTION\n${s.description}\n\n${s.chapters.map((c) => `${c.time} ${c.title}`).join('\n')}`,
+    `TAGS\n${s.tags.join(', ')}`,
+  ].join('\n\n') + sources;
+}
+
+function CopyButton({ text, label = 'Copy', className = '' }: { text: string; label?: string; className?: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        } catch {}
+      }}
+      className={`shrink-0 rounded-full border border-line px-3 py-1 text-xs font-medium text-pine active:bg-cream ${className}`}
+    >
+      {copied ? 'Copied ✓' : label}
+    </button>
+  );
+}
+
+function ScriptSection({ title, copy, children }: { title: string; copy?: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-line px-4 py-4 first:border-t-0">
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <h4 className="text-xs font-medium uppercase tracking-wider text-gold">{title}</h4>
+        {copy && <CopyButton text={copy} />}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+interface ScriptViewProps {
+  isSaved: (id: string) => boolean;
+  onToggleSave: (p: Passage) => void;
+}
+
+function ScriptHeader({ kind, title, text }: { kind: 'short' | 'youtube'; title: string; text: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-line bg-cream/60 px-4 py-3.5">
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+          {kind === 'short' ? 'TikTok · Reels · Shorts' : 'YouTube'}
+        </p>
+        <h3 className="mt-0.5 font-serif text-xl font-semibold leading-snug text-ink">{title}</h3>
+      </div>
+      <CopyButton text={text} label="Copy all" className="mt-1 bg-paper" />
+    </div>
+  );
+}
+
+function SourcePassages({ passages, isSaved, onToggleSave }: { passages: Passage[] } & ScriptViewProps) {
+  if (!passages.length) return null;
+  return (
+    <ScriptSection title="Quotes used (verified)">
+      <div className="space-y-3">
+        {passages.map((p) => (
+          <PassageCard key={p.chunkId} passage={p} saved={isSaved(p.chunkId)} onToggleSave={() => onToggleSave(p)} />
+        ))}
+      </div>
+    </ScriptSection>
+  );
+}
+
+function ShortScriptView({ script: s, ...save }: { script: ShortScript } & ScriptViewProps) {
+  const words = s.beats.reduce((n, b) => n + b.voiceover.split(/\s+/).filter(Boolean).length, 0);
+  return (
+    <article className="overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+      <ScriptHeader kind="short" title={s.title} text={scriptToText(s)} />
+      <ScriptSection title="Hooks to test">
+        <ol className="space-y-2">
+          {s.hooks.map((h, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-xl bg-cream/50 px-3 py-2.5">
+              <span className="flex-1">
+                <span className="block font-serif text-[17px] leading-snug text-ink">{h.text}</span>
+                <span className="mt-0.5 block text-xs text-muted">{h.style}</span>
+              </span>
+              <CopyButton text={h.text} />
+            </li>
+          ))}
+        </ol>
+      </ScriptSection>
+      <ScriptSection title={`Script · about ${Math.max(15, Math.round(words / 2.5))} seconds`} copy={s.beats.map((b) => b.voiceover).join('\n\n')}>
+        <ol className="space-y-4">
+          {s.beats.map((b, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-pine text-xs font-medium text-paper">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-[15px] leading-relaxed text-ink">{b.voiceover}</p>
+                {b.onScreen && (
+                  <p className="inline-block rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-paper">{b.onScreen}</p>
+                )}
+                {b.visual && <p className="text-xs italic text-muted">🎬 {b.visual}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </ScriptSection>
+      <ScriptSection title="Call to action" copy={s.cta}>
+        <p className="text-[15px] text-ink">{s.cta}</p>
+      </ScriptSection>
+      <ScriptSection title="Caption & hashtags" copy={`${s.caption}\n\n${s.hashtags.map((h) => `#${h}`).join(' ')}`}>
+        <p className="whitespace-pre-wrap text-[15px] text-ink">{s.caption}</p>
+        <p className="mt-2 text-sm text-pine">{s.hashtags.map((h) => `#${h}`).join(' ')}</p>
+      </ScriptSection>
+      <SourcePassages passages={s.passages} {...save} />
+    </article>
+  );
+}
+
+function YouTubeScriptView({ script: s, ...save }: { script: YouTubeScript } & ScriptViewProps) {
+  const [open, setOpen] = useState(false);
+  const words = [s.hook, ...s.sections.map((x) => x.voiceover), s.outro].join(' ').split(/\s+/).filter(Boolean).length;
+  return (
+    <article className="overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+      <ScriptHeader kind="youtube" title={s.titles[0] ?? 'YouTube script'} text={scriptToText(s)} />
+      <ScriptSection title="Title options">
+        <ul className="space-y-2">
+          {s.titles.map((t, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="flex-1 font-serif text-[17px] leading-snug text-ink">{t}</span>
+              <CopyButton text={t} />
+            </li>
+          ))}
+        </ul>
+        {s.thumbnailText.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {s.thumbnailText.map((t, i) => (
+              <span key={i} className="rounded-md bg-ink px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-gold">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+      </ScriptSection>
+      <ScriptSection title="Hook · first 30 seconds" copy={s.hook}>
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">{s.hook}</p>
+      </ScriptSection>
+      <ScriptSection title={`Script · about ${Math.round(words / 150)} minutes`}>
+        {open ? (
+          <div className="space-y-5">
+            {s.sections.map((x, i) => (
+              <div key={i}>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <h5 className="font-serif text-lg font-semibold text-pine">{x.heading}</h5>
+                  <CopyButton text={x.voiceover} />
+                </div>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">{x.voiceover}</p>
+                {x.onScreen && <p className="mt-1.5 text-xs italic text-muted">🎬 On screen: {x.onScreen}</p>}
+              </div>
+            ))}
+            <div>
+              <h5 className="mb-1.5 font-serif text-lg font-semibold text-pine">Outro</h5>
+              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">{s.outro}</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <ol className="space-y-1 text-[15px] text-ink">
+              {s.sections.map((x, i) => (
+                <li key={i}>
+                  {i + 1}. {x.heading}
+                </li>
+              ))}
+            </ol>
+            <button onClick={() => setOpen(true)} className="mt-3 rounded-full bg-pine px-4 py-2 text-sm font-medium text-paper">
+              Read full script
+            </button>
+          </div>
+        )}
+      </ScriptSection>
+      <ScriptSection
+        title="Description & chapters"
+        copy={`${s.description}\n\n${s.chapters.map((c) => `${c.time} ${c.title}`).join('\n')}`}
+      >
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{s.description}</p>
+        <ul className="mt-3 space-y-0.5 text-sm text-muted">
+          {s.chapters.map((c, i) => (
+            <li key={i}>
+              <span className="font-medium tabular-nums text-pine">{c.time}</span> {c.title}
+            </li>
+          ))}
+        </ul>
+      </ScriptSection>
+      <ScriptSection title="Tags" copy={s.tags.join(', ')}>
+        <p className="text-sm text-muted">{s.tags.join(', ')}</p>
+      </ScriptSection>
+      <SourcePassages passages={s.passages} {...save} />
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Composer
 
 interface ComposerProps {
@@ -632,10 +902,12 @@ interface ComposerProps {
   onPick: (s: Suggestion) => void;
   onMore: () => void;
   placeholder: string;
+  mode: Mode;
+  onMode: (m: Mode) => void;
   ref: React.Ref<HTMLTextAreaElement>;
 }
 
-function Composer({ draft, onDraft, onSend, busy, showQuick, onPick, onMore, placeholder, ref }: ComposerProps) {
+function Composer({ draft, onDraft, onSend, busy, showQuick, onPick, onMore, placeholder, mode, onMode, ref }: ComposerProps) {
   const inner = useRef<HTMLTextAreaElement | null>(null);
 
   // Grow with the text, up to about six lines.
@@ -654,9 +926,25 @@ function Composer({ draft, onDraft, onSend, busy, showQuick, onPick, onMore, pla
 
   return (
     <div className="shrink-0 border-t border-line/70 bg-paper">
+      <div className="flex gap-1 px-3 pt-2.5" role="tablist" aria-label="What to write">
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            role="tab"
+            aria-selected={mode === m.id}
+            disabled={busy}
+            onClick={() => onMode(m.id)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              mode === m.id ? 'bg-pine text-paper' : 'text-muted active:bg-cream'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
       {showQuick && (
-        <div className="flex gap-2 overflow-x-auto px-4 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {QUICK_SUGGESTIONS.map((s) => (
+        <div className="flex gap-2 overflow-x-auto px-4 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {quickSuggestions(mode).map((s) => (
             <Chip key={s.label} suggestion={s} onPick={onPick} />
           ))}
           <button onClick={onMore} className="shrink-0 rounded-full px-3 py-2 text-sm font-medium text-pine">

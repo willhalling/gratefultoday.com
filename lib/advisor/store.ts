@@ -2,6 +2,7 @@ import 'server-only';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import type { Chunk } from './library';
+import type { Entry, Passage, SavedPassage } from './types';
 
 /**
  * Firestore layout (server-only; the client rules don't open `advisor`):
@@ -12,35 +13,7 @@ import type { Chunk } from './library';
 const ROOT = 'advisor';
 export const MAX_NOTES = 80;
 
-export interface Passage {
-  chunkId: string;
-  quote: string;
-  why: string;
-  author: string;
-  work: string;
-  translator: string | null;
-  location: string | null;
-  source: string;
-}
-
-export interface Reply {
-  opening: string;
-  passages: Passage[];
-  closing: string;
-}
-
-export interface Entry {
-  id: string;
-  entry: string;
-  voice: string;
-  reply: Reply;
-  createdAt: string;
-}
-
-export interface SavedPassage extends Passage {
-  note: string;
-  savedAt: string;
-}
+export type { Entry, Passage, Reply, SavedPassage } from './types';
 
 const db = () => getFirebaseAdmin().db;
 const userDoc = (uid: string) => db().collection(ROOT).doc(uid);
@@ -75,7 +48,15 @@ export async function recentEntries(uid: string, limit = 20): Promise<Entry[]> {
   const snap = await userDoc(uid).collection('entries').orderBy('createdAt', 'desc').limit(limit).get();
   return snap.docs.map((d) => {
     const data = d.data();
-    return { id: d.id, entry: data.entry, voice: data.voice, reply: data.reply, createdAt: iso(data.createdAt) };
+    return {
+      id: d.id,
+      entry: data.entry,
+      voice: data.voice,
+      mode: data.mode ?? 'reflect',
+      ...(data.reply && { reply: data.reply }),
+      ...(data.script && { script: data.script }),
+      createdAt: iso(data.createdAt),
+    };
   });
 }
 

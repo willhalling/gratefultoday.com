@@ -45,32 +45,35 @@ export type AdviceProgress =
 
 type Progress = ((p: AdviceProgress) => void) | undefined;
 
-function formatPassage(c: Chunk): string {
+export function formatPassage(c: Chunk): string {
   const cite = [c.author, c.work, c.translator && `trans. ${c.translator}`, c.location].filter(Boolean).join(', ');
   return `<passage id="${c.id}">\n${cite}\n\n${c.text}\n</passage>`;
 }
 
 export async function advise(uid: string, entryText: string, voiceId?: string, onProgress?: Progress): Promise<AdviceResult> {
   const voice = getVoice(voiceId);
-  const [notes, recent] = await Promise.all([getNotes(uid), recentEntries(uid, RECENT_IN_PROMPT)]);
+  const [notes, latest] = await Promise.all([getNotes(uid), recentEntries(uid, RECENT_IN_PROMPT * 3)]);
+  // Only journal exchanges give context; video scripts aren't part of the conversation.
+  const recent = latest.flatMap((e) => (e.reply && (e.mode ?? 'reflect') === 'reflect' ? [{ ...e, reply: e.reply }] : [])).slice(0, RECENT_IN_PROMPT);
   const context = { notes, recent, entry: entryText, now: new Date() };
 
   // Fast path: find passages by meaning first, then one streamed call.
   // Without embeddings (or if that search fails) the model searches with a tool instead.
-  let result: { reply: ModelReply; offered: Map<string, Chunk> } | null = null;
+  let found: Chunk[] | null = null;
   if (semanticSearchAvailable()) {
     try {
       // A very short entry ("following up on yesterday") searches with the last one too.
       const query = entryText.split(/\s+/).length < 12 && recent[0] ? `${recent[0].entry}\n\n${entryText}` : entryText;
-      const found = await semanticSearch(query, { authors: voice.authors, limit: PASSAGES_GIVEN });
+      found = await semanticSearch(query, { authors: voice.authors, limit: PASSAGES_GIVEN });
       onProgress?.({ type: 'retrieved', found: found.length });
-      result = await replyWithPassages(voice, context, found, onProgress);
     } catch (e) {
-      if (e instanceof Anthropic.APIError) throw e;
       console.error('Advisor: semantic search failed, falling back to the search tool', e);
     }
   }
-  result ??= await replyWithSearch(voice, context, onProgress);
+  // Only a failed search falls back; a failed reply is an error, not a reason to pay twice.
+  const result = found?.length
+    ? await replyWithPassages(voice, context, found, onProgress)
+    : await replyWithSearch(voice, context, onProgress);
 
   // Show only quotes that appear word for word in a passage the model was actually given.
   const passages: Passage[] = [];
@@ -90,6 +93,7 @@ export async function advise(uid: string, entryText: string, voiceId?: string, o
     addEntry(uid, {
       entry: entryText,
       voice: voice.id,
+      mode: 'reflect',
       reply: { opening: out.opening.trim(), passages, closing: out.closing.trim() },
     }),
     updateNotes(uid, out.remember, out.forget),
