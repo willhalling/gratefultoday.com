@@ -29,6 +29,8 @@ const OLD_SECTIONS = [
 ];
 
 const nextConfig = {
+  // This folder is the project root, even if a parent folder has its own lockfile.
+  outputFileTracingRoot: __dirname,
   // The advisor reads the knowledge base at runtime, so ship it with its routes.
   outputFileTracingIncludes: {
     '/api/advisor': ['./knowledge/chunks.jsonl'],
