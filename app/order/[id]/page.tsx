@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AutoRefresh from '@/components/order/auto-refresh';
+import LookPicker from '@/components/order/look-picker';
+import { LOOK_LABELS } from '@/lib/looks';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { syncRender } from '@/lib/orders/production';
 import { getOrder, signedUrl, toPublic } from '@/lib/orders/store';
@@ -13,6 +15,8 @@ export const dynamic = 'force-dynamic';
 const STATUS_COPY: Record<OrderStatus, { heading: string; body: string }> = {
   approved: { heading: 'Making your video', body: 'Getting the narrator ready…' },
   narrating: { heading: 'Making your video', body: 'The narrator is reading your script…' },
+  previewing: { heading: 'Making your video', body: 'Making four looks to choose from…' },
+  choosing: { heading: 'Choose the look', body: 'Pick the look for your video.' },
   rendering: { heading: 'Making your video', body: 'Putting the words on screen in time with the voice…' },
   ready: { heading: 'Your video is ready', body: 'Watch it, download it, and send it whenever you’re ready.' },
   failed: {
@@ -37,6 +41,25 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   await syncRender(id);
   const doc = (await getOrder(id))!;
   const order = toPublic(id, doc, MAX_GENERATIONS);
+
+  // Until a look is chosen, the buyer is on the full-screen picker.
+  if (['approved', 'narrating', 'previewing', 'choosing'].includes(doc.status)) {
+    const clips = await Promise.all(
+      (doc.previews ?? []).map(async (p) => ({
+        look: p.look,
+        label: LOOK_LABELS[p.look],
+        status: p.status,
+        url: p.status === 'ready' && p.clipPath ? await signedUrl(p.clipPath, 6) : null,
+      })),
+    );
+    return (
+      <>
+        {doc.status !== 'choosing' && <AutoRefresh seconds={4} />}
+        <LookPicker orderId={id} name={order.recipientName} clips={clips} />
+      </>
+    );
+  }
+
   const copy = STATUS_COPY[order.status];
   const working = IN_PRODUCTION.includes(order.status);
 

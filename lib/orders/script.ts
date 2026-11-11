@@ -4,7 +4,9 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { z } from 'zod';
 import type { Occasion } from '@/lib/product';
 import { EDIT_CHECK_SYSTEM_PROMPT, RECOVERY_SYSTEM_PROMPT, THANKS_SYSTEM_PROMPT } from './prompts';
-import { ScriptResult, type RecoveryAnswers, type Script, type ThanksAnswers } from './types';
+import { ScriptResult, type RecoveryAnswers, type Script, type Season, type ThanksAnswers } from './types';
+
+export type { Season };
 
 const MODEL = 'claude-opus-5-5';
 // On a policy decline, the API re-runs the request on a fallback model it picks.
@@ -12,7 +14,6 @@ const FALLBACK = { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'defau
 
 const client = new Anthropic();
 
-export type Season = 'christmas' | 'new_year' | 'none';
 
 /** Christmas until the 27th of December, New Year until mid-January (UK). */
 export function currentSeason(now = new Date()): Season {
@@ -38,13 +39,14 @@ export async function writeScript(
   answers: ThanksAnswers | RecoveryAnswers,
   options: { changeRequest?: string; season?: Season } = {},
 ): Promise<ScriptOutcome> {
+  const season = options.season ?? currentSeason();
   const response = await client.beta.messages.parse({
     model: MODEL,
     max_tokens: 16000,
     ...FALLBACK,
     output_config: { effort: 'medium', format: betaZodOutputFormat(ScriptResult) },
     system: occasion === 'recovery' ? RECOVERY_SYSTEM_PROMPT : THANKS_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: promptInput(answers, options.season ?? currentSeason(), options.changeRequest) }],
+    messages: [{ role: 'user', content: promptInput(answers, season, options.changeRequest) }],
   });
 
   if (response.stop_reason === 'refusal') {
@@ -62,6 +64,7 @@ export async function writeScript(
     status: 'ok',
     script: {
       title: out.title.trim(),
+      season,
       voiceDirection: out.voice_direction.trim(),
       visualMood: out.visual_mood,
       backgroundSuggestion: out.background_suggestion.trim(),

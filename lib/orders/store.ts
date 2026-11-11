@@ -3,7 +3,8 @@ import { createHash } from 'crypto';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import type { Occasion } from '@/lib/product';
-import type { OrderStatus, RecoveryAnswers, Script, ThanksAnswers } from './types';
+import type { LookName } from '@/lib/looks';
+import type { OrderStatus, Preview, RecoveryAnswers, Script, ThanksAnswers } from './types';
 
 const ORDERS = 'videoOrders';
 const RATE_LIMITS = 'rateLimits';
@@ -23,6 +24,13 @@ export interface OrderDoc {
   /** Production (production.ts). */
   narrationPath?: string | null;
   narrationSeconds?: number | null;
+  /** Word timings for the narration, reused by every render of it. */
+  narrationWords?: { word: string; start: number; end: number }[] | null;
+  /** Short clips in each look, then the one the buyer chose. */
+  previews?: Preview[] | null;
+  look?: LookName | null;
+  /** The site's origin when production started, for WaveCanvas webhooks. */
+  origin?: string | null;
   renderId?: string | null;
   renderProgress?: number | null;
   videoPath?: string | null;
@@ -43,6 +51,8 @@ export interface PublicOrder {
   generationsLeft: number;
   /** 0–100 while WaveCanvas renders. */
   renderProgress: number | null;
+  /** The looks on offer and which clips are ready (no links; the order page signs those). */
+  previews: { look: LookName; status: Preview['status'] }[];
 }
 
 const db = () => getFirebaseAdmin().db;
@@ -67,6 +77,27 @@ export async function updateOrder(id: string, data: Partial<Omit<OrderDoc, 'crea
     .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
 }
 
+/**
+ * Updates the order inside a transaction: `fn` gets the current order and
+ * returns the changes to make (or null for none). For updates that can race,
+ * like four preview renders finishing at once.
+ */
+export async function updateOrderTx(
+  id: string,
+  fn: (order: OrderDoc) => Partial<Omit<OrderDoc, 'createdAt' | 'updatedAt'>> | null,
+): Promise<OrderDoc | null> {
+  const ref = db().collection(ORDERS).doc(id);
+  return db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return null;
+    const order = snap.data() as OrderDoc;
+    const changes = fn(order);
+    if (!changes) return order;
+    tx.update(ref, { ...changes, updatedAt: FieldValue.serverTimestamp() });
+    return { ...order, ...changes } as OrderDoc;
+  });
+}
+
 export function toPublic(id: string, order: OrderDoc, maxGenerations: number): PublicOrder {
   return {
     id,
@@ -76,6 +107,7 @@ export function toPublic(id: string, order: OrderDoc, maxGenerations: number): P
     script: order.status === 'script_ready' ? order.generated : order.approved,
     generationsLeft: Math.max(0, maxGenerations - order.generations),
     renderProgress: order.status === 'rendering' ? (order.renderProgress ?? null) : null,
+    previews: (order.previews ?? []).map((p) => ({ look: p.look, status: p.status })),
   };
 }
 

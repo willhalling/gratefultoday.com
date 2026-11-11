@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import OrderFlow from '@/components/order/order-flow';
 import { THANKS_RELATIONSHIPS } from '@/lib/orders/types';
 import { OCCASIONS, type Occasion } from '@/lib/product';
@@ -16,17 +15,15 @@ export default async function CreatePage({ searchParams }: { searchParams: Searc
   const occasion: Occasion = type === OCCASIONS.recovery.slug ? 'recovery' : 'thanks';
   // /create?for=teaching-assistant → "teaching assistant"
   const relationship = recipient?.replace(/-/g, ' ');
-  const initialRelationship = (THANKS_RELATIONSHIPS as readonly string[]).includes(relationship ?? '')
-    ? relationship
-    : undefined;
+  const initialRelationship =
+    occasion === 'thanks' && (THANKS_RELATIONSHIPS as readonly string[]).includes(relationship ?? '') ? relationship : undefined;
 
+  // Full screen, no site header or footer: the flow is the whole page.
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
-        <OrderFlow initialOccasion={occasion} initialRelationship={initialRelationship} />
-      </main>
-      <SiteFooter />
-    </>
+    <OrderFlow
+      initialOccasion={occasion}
+      occasionChosen={Boolean(type) || Boolean(initialRelationship)}
+      initialRelationship={initialRelationship}
+    />
   );
 }

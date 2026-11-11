@@ -48,3 +48,9 @@ grateful-today-*-firebase-adminsdk-*.json
 .env
 .env.local
 grateful-today-*-firebase-adminsdk-*.json
+
+# Local dev media (impulse responses of unconfirmed licence, sample audio)
+/public/dev-media/
+
+# old test renders
+/e2e-output/

@@ -88,3 +88,110 @@
     animation: none;
   }
 }
+
+/* ---------- The order flow: a dark, full-screen stage ---------- */
+
+.stage {
+  position: relative;
+  min-height: 100svh;
+  /* clip, not hidden: the glows overflow, and hidden lets focus scroll the stage. */
+  overflow: clip;
+  background: #070908;
+  color: #f6efe3;
+  isolation: isolate;
+}
+
+/* Two slow, warm glows drifting behind everything. */
+.stage::before,
+.stage::after {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  width: 90vmax;
+  height: 90vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.stage::before {
+  top: -45vmax;
+  left: -30vmax;
+  background: radial-gradient(circle, #1f4d3f 0%, transparent 65%);
+  animation: drift-a 26s ease-in-out infinite alternate;
+}
+.stage::after {
+  bottom: -50vmax;
+  right: -35vmax;
+  background: radial-gradient(circle, #6b3a1f 0%, transparent 65%);
+  animation: drift-b 32s ease-in-out infinite alternate;
+}
+@keyframes drift-a {
+  to {
+    transform: translate(18vmax, 14vmax) scale(1.1);
+  }
+}
+@keyframes drift-b {
+  to {
+    transform: translate(-16vmax, -12vmax) scale(1.15);
+  }
+}
+
+/* Film grain and a vignette, over the glows and under the content. */
+.stage-grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgb(0 0 0 / 0.7) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+}
+
+/* Each screen arrives like a title card. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.card-in {
+  animation: card-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.card-in-late {
+  animation: card-in 0.7s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.breathe {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage::before,
+  .stage::after,
+  .card-in,
+  .card-in-late,
+  .breathe {
+    animation: none;
+  }
+}
+
+/* The chat bubble breaks the full-screen order flow. */
+body:has(.stage) .crisp-client {
+  display: none !important;
+}

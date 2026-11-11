@@ -1,24 +1,13 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { Script } from '@/lib/orders/types';
 
 /**
  * WaveCanvas API client (https://wavecanvas.io/api/v1). Each order renders a
- * template video made in the WaveCanvas editor, with the order's narration
+ * base video with a look's `changes` (lib/looks.ts), the order's narration
  * and lines passed as the render's own `song`.
  */
 
 const BASE = process.env.WAVECANVAS_API_URL || 'https://wavecanvas.io/api/v1';
-
-/**
- * Template videos in the WaveCanvas editor, one per mood. Set
- * WAVECANVAS_TEMPLATE_CALM / _BRIGHT / _COSY, or just WAVECANVAS_TEMPLATE for all.
- */
-export function templateFor(mood: Script['visualMood']): string {
-  const id = process.env[`WAVECANVAS_TEMPLATE_${mood.toUpperCase()}`] || process.env.WAVECANVAS_TEMPLATE;
-  if (!id) throw new Error(`No WaveCanvas template video for "${mood}". Set WAVECANVAS_TEMPLATE (or WAVECANVAS_TEMPLATE_${mood.toUpperCase()}).`);
-  return id;
-}
 
 export type RenderStatus = 'queued' | 'rendering' | 'succeeded' | 'failed';
 
@@ -67,7 +56,17 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function createRender(input: {
   videoId: string;
+  orientation?: 'portrait' | 'landscape' | 'square';
+  /** Part of the song to render, in seconds (default: all of it). */
+  start?: number;
+  end?: number;
+  /** Signature style id; needs a photo background. */
+  style?: string | null;
+  /** A photo in place of the base video's background, for this render only. */
+  background?: { imageUrl: string };
   title: string;
+  subtitle?: string;
+  changes?: Record<string, unknown>;
   song: RenderSong;
   webhookUrl?: string;
   metadata: Record<string, string>;

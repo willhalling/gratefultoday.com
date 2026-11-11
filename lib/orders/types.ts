@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { LookName } from '@/lib/looks';
 import { RECOVERY_MILESTONES } from '@/lib/product';
 
 const text = (max: number) => z.string().trim().max(max);
@@ -51,7 +52,7 @@ export const ThanksAnswers = z.object({
   relationship: z.enum(THANKS_RELATIONSHIPS),
   relationship_other: optional(60),
   what_they_did: required(1200, 'why you’re grateful'),
-  tone: z.enum(TONES),
+  tone: z.enum(TONES).default('heartfelt'),
 });
 
 export const RecoveryAnswers = z.object({
@@ -63,7 +64,7 @@ export const RecoveryAnswers = z.object({
   what_has_changed: required(1200, 'what you’ve noticed or admire'),
   /** What they're recovering from. Only said aloud if the buyer fills it in. */
   recovering_from: optional(80),
-  tone: z.enum(RECOVERY_TONES),
+  tone: z.enum(RECOVERY_TONES).default('heartfelt'),
 });
 
 export type ThanksAnswers = z.infer<typeof ThanksAnswers>;
@@ -87,8 +88,12 @@ export const ScriptResult = z.object({
 });
 export type ScriptResult = z.infer<typeof ScriptResult>;
 
+export type Season = 'christmas' | 'new_year' | 'none';
+
 export interface Script {
   title: string;
+  /** The season the script was written for (older scripts don't have it). */
+  season?: Season;
   voiceDirection: string;
   visualMood: ScriptResult['visual_mood'];
   backgroundSuggestion: string;
@@ -101,11 +106,24 @@ export type OrderStatus =
   | 'declined' // won't be made
   | 'approved' // buyer approved the script; production starts
   | 'narrating' // ElevenLabs is reading it
+  | 'previewing' // WaveCanvas is rendering a short clip in each look
+  | 'choosing' // buyer is picking a look
   | 'rendering' // WaveCanvas is making the video
   | 'ready' // video saved to our storage
   | 'failed'; // production failed (see productionError)
 
-export const IN_PRODUCTION: readonly OrderStatus[] = ['approved', 'narrating', 'rendering'];
+export const IN_PRODUCTION: readonly OrderStatus[] = ['approved', 'narrating', 'previewing', 'rendering'];
+
+/** A short clip of the video in one look, for the buyer to choose from. */
+export interface Preview {
+  look: LookName;
+  renderId: string;
+  status: 'rendering' | 'ready' | 'failed';
+  /** The clip in our storage, once ready. */
+  clipPath: string | null;
+}
+
+export const ChooseRequest = z.object({ look: z.string().max(40) });
 
 /** The buyer's edits to the script, checked before approval. */
 export const ApproveRequest = z.object({
@@ -121,6 +139,6 @@ export const RegenerateRequest = z.object({
 });
 
 export const MAX_GENERATIONS = 4;
-export const MAX_WORDS = 260;
+export const MAX_WORDS = 80;
 
 export const wordCount = (lines: string[]) => lines.join(' ').split(/\s+/).filter(Boolean).length;
