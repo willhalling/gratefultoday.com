@@ -33,7 +33,7 @@ const nextConfig = {
   outputFileTracingRoot: __dirname,
   // The advisor reads the knowledge base at runtime, so ship it with its routes.
   outputFileTracingIncludes: {
-    '/api/advisor': ['./knowledge/chunks.jsonl'],
+    '/api/advisor': ['./knowledge/chunks.jsonl', './knowledge/embeddings.json', './knowledge/embeddings.i8'],
     '/api/advisor/saved': ['./knowledge/chunks.jsonl'],
   },
   images: {

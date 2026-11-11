@@ -36,8 +36,15 @@ interface Saved extends Passage {
 interface Pending {
   entry: string;
   voice: string;
+  /** Passages found by meaning, before writing starts (fast path). */
+  found: number | null;
+  /** Keyword searches the advisor ran (fallback path). */
   searches: string[][];
+  /** The opening, as it's being written. */
+  opening: string;
 }
+
+type ProgressEvent = { type: 'retrieved'; found: number } | { type: 'search'; queries: string[] } | { type: 'opening'; text: string };
 
 type Tab = 'journal' | 'saved' | 'memory';
 
@@ -57,7 +64,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 async function askAdvisor(
   entry: string,
   voice: string,
-  onSearch: (queries: string[]) => void,
+  onProgress: (event: ProgressEvent) => void,
 ): Promise<{ entry: Entry; notes: string[] }> {
   const res = await fetch('/api/advisor', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ entry, voice }) });
   if (!res.ok || !res.body) {
@@ -75,9 +82,9 @@ async function askAdvisor(
     for (const line of lines) {
       if (!line.trim()) continue;
       const event = JSON.parse(line);
-      if (event.type === 'search') onSearch(event.queries);
-      else if (event.type === 'error') throw new Error(event.message);
+      if (event.type === 'error') throw new Error(event.message);
       else if (event.type === 'done') return event;
+      else onProgress(event);
     }
     if (done) throw new Error('The connection closed before the reply arrived. Please try again.');
   }
@@ -176,14 +183,22 @@ export default function AdvisorApp() {
     const text = draft.trim();
     if (!text || pending) return;
     setProblem(null);
-    setPending({ entry: text, voice, searches: [] });
+    setPending({ entry: text, voice, found: null, searches: [], opening: '' });
     updateDraft('');
     composer.current?.blur();
     scrollToEnd();
     try {
-      const r = await askAdvisor(text, voice, (queries) => {
-        setPending((p) => (p ? { ...p, searches: [...p.searches, queries] } : p));
-        scrollToEnd();
+      let started = false;
+      const r = await askAdvisor(text, voice, (event) => {
+        setPending((p) => {
+          if (!p) return p;
+          if (event.type === 'retrieved') return { ...p, found: event.found };
+          if (event.type === 'search') return { ...p, searches: [...p.searches, event.queries] };
+          return { ...p, opening: event.text };
+        });
+        // Follow the reply down as it arrives, once, rather than on every word.
+        if (event.type !== 'opening' || !started) scrollToEnd();
+        if (event.type === 'opening') started = true;
       });
       setEntries((e) => [...e, r.entry]);
       setNotes(r.notes);
@@ -469,7 +484,7 @@ function Thread({
         <div className="space-y-5">
           {lastDay !== 'Today' && <DaySeparator label="Today" />}
           <YourEntry text={pending.entry} />
-          <Thinking voiceLabel={voiceLabel(pending.voice)} searches={pending.searches} />
+          <Thinking voiceLabel={voiceLabel(pending.voice)} pending={pending} />
         </div>
       )}
     </div>
@@ -522,26 +537,45 @@ function Reply({
   );
 }
 
-function Thinking({ voiceLabel, searches }: { voiceLabel: string; searches: string[][] }) {
+function Thinking({ voiceLabel, pending }: { voiceLabel: string; pending: Pending }) {
+  const { found, searches, opening } = pending;
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <p className="text-xs font-medium uppercase tracking-wider text-gold">{voiceLabel}</p>
-      <div className="rounded-2xl border border-line bg-cream/50 px-4 py-3.5 text-sm text-muted">
-        <ul className="space-y-2">
-          {searches.map((q, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="text-pine">✓</span>
-              <span>
-                Searched the library for <span className="italic text-ink">{q.join(' · ')}</span>
-              </span>
+      {opening ? (
+        <>
+          <p className="whitespace-pre-wrap font-serif text-[17px] leading-relaxed text-ink">
+            {opening}
+            <span className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-pine/60" aria-hidden />
+          </p>
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <Dots /> Choosing the passages…
+          </p>
+        </>
+      ) : (
+        <div className="rounded-2xl border border-line bg-cream/50 px-4 py-3.5 text-sm text-muted">
+          <ul className="space-y-2">
+            {found !== null && (
+              <li className="flex gap-2">
+                <span className="text-pine">✓</span>
+                <span>Found {found} passages that might speak to this</span>
+              </li>
+            )}
+            {searches.map((q, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-pine">✓</span>
+                <span>
+                  Searched the library for <span className="italic text-ink">{q.join(' · ')}</span>
+                </span>
+              </li>
+            ))}
+            <li className="flex items-center gap-2">
+              <Dots />
+              <span>{found !== null || searches.length ? 'Reading them and writing…' : 'Looking through the library…'}</span>
             </li>
-          ))}
-          <li className="flex items-center gap-2">
-            <Dots />
-            <span>{searches.length ? 'Choosing passages and writing…' : 'Reading what you wrote…'}</span>
-          </li>
-        </ul>
-      </div>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

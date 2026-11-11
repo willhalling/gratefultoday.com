@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knowledge:fetch": "node scripts/fetch-knowledge.js",
-    "knowledge:chunk": "node scripts/chunk-knowledge.js"
+    "knowledge:chunk": "node scripts/chunk-knowledge.js",
+    "knowledge:embed": "node scripts/embed-knowledge.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",
