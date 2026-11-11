@@ -4,7 +4,7 @@
  * Admin only.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { error, handle, json, readBody } from '@/lib/orders/http';
 import { advise } from '@/lib/advisor/advise';
@@ -29,23 +29,45 @@ export async function GET(req: NextRequest) {
   });
 }
 
+/**
+ * Streams newline-delimited JSON so the page can show progress:
+ *   {"type":"search","queries":[...],"found":8}   (zero or more)
+ *   {"type":"done", ...AdviceResult}  or  {"type":"error","message":"..."}
+ */
 export async function POST(req: NextRequest) {
   return handle(async () => {
     const uid = await adminUid(req);
     if (!uid) return error(401, 'Sign in as an admin.');
     const body = await readBody(req, AdviseRequest);
     if (!body.ok) return body.response;
-    try {
-      return json(await advise(uid, body.data.entry, body.data.voice));
-    } catch (e) {
-      // This page is only for the admin, so show the API's own reason
-      // (spending limit, bad key, overloaded) rather than a generic error.
-      if (e instanceof Anthropic.APIError) {
-        console.error(e);
-        const reason = (e.error as { error?: { message?: string } } | undefined)?.error?.message ?? e.message;
-        return error(502, `Anthropic API: ${reason}`);
-      }
-      throw e;
-    }
+    const { entry, voice } = body.data;
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: object) => controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
+        try {
+          const result = await advise(uid, entry, voice, send);
+          send({ type: 'done', ...result });
+        } catch (e) {
+          console.error(e);
+          send({ type: 'error', message: errorMessage(e) });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new NextResponse(stream, {
+      headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
   });
+}
+
+/** This page is only for the admin, so show the real reason (spending limit, bad key, overloaded). */
+function errorMessage(e: unknown): string {
+  if (e instanceof Anthropic.APIError) {
+    const reason = (e.error as { error?: { message?: string } } | undefined)?.error?.message ?? e.message;
+    return `Anthropic API: ${reason}`;
+  }
+  return e instanceof Error ? e.message : 'Something went wrong.';
 }

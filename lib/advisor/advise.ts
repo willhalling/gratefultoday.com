@@ -36,7 +36,15 @@ function formatResult(c: Chunk): string {
   return `<passage id="${c.id}">\n${cite}\n\n${c.text}\n</passage>`;
 }
 
-export async function advise(uid: string, entryText: string, voiceId?: string): Promise<AdviceResult> {
+/** Live progress while the advisor works, for the page to show. */
+export type AdviceProgress = { type: 'search'; queries: string[]; found: number };
+
+export async function advise(
+  uid: string,
+  entryText: string,
+  voiceId?: string,
+  onProgress?: (p: AdviceProgress) => void,
+): Promise<AdviceResult> {
   const voice = getVoice(voiceId);
   const [notes, recent] = await Promise.all([getNotes(uid), recentEntries(uid, RECENT_IN_PROMPT)]);
 
@@ -57,6 +65,7 @@ export async function advise(uid: string, entryText: string, voiceId?: string): 
         .filter((c) => !seen.has(c.id))
         .slice(0, RESULTS_PER_SEARCH);
       results.forEach((c) => seen.set(c.id, c));
+      onProgress?.({ type: 'search', queries, found: results.length });
       return results.length ? results.map(formatResult).join('\n\n') : 'No new passages matched. Try different words.';
     },
   });
