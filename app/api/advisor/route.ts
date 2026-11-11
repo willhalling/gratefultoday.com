@@ -3,6 +3,7 @@
  * POST /api/advisor: write an entry and get the advisor's reply.
  * Admin only.
  */
+import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { error, handle, json, readBody } from '@/lib/orders/http';
@@ -34,6 +35,17 @@ export async function POST(req: NextRequest) {
     if (!uid) return error(401, 'Sign in as an admin.');
     const body = await readBody(req, AdviseRequest);
     if (!body.ok) return body.response;
-    return json(await advise(uid, body.data.entry, body.data.voice));
+    try {
+      return json(await advise(uid, body.data.entry, body.data.voice));
+    } catch (e) {
+      // This page is only for the admin, so show the API's own reason
+      // (spending limit, bad key, overloaded) rather than a generic error.
+      if (e instanceof Anthropic.APIError) {
+        console.error(e);
+        const reason = (e.error as { error?: { message?: string } } | undefined)?.error?.message ?? e.message;
+        return error(502, `Anthropic API: ${reason}`);
+      }
+      throw e;
+    }
   });
 }
