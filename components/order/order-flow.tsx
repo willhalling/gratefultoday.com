@@ -452,7 +452,7 @@ function ScriptReview({ order, onChange }: { order: PublicOrder; onChange: (o: P
   const [busy, setBusy] = useState<'approve' | 'regenerate' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (order.status === 'needs_review' || order.status === 'declined') return <Held status={order.status} />;
+  if (order.status === 'needs_review' || order.status === 'declined') return <Held status={order.status} occasion={order.occasion} />;
   if (busy === 'regenerate') return <Writing name="" />;
 
   const words = wordCount(lines);
@@ -619,7 +619,7 @@ function GrowingText({
   );
 }
 
-function Held({ status }: { status: 'needs_review' | 'declined' }) {
+function Held({ status, occasion }: { status: 'needs_review' | 'declined'; occasion: Occasion }) {
   return (
     <Stage>
       <div className="mx-auto flex min-h-[100svh] max-w-lg flex-col items-center justify-center px-6 text-center">
@@ -629,7 +629,9 @@ function Held({ status }: { status: 'needs_review' | 'declined' }) {
         <p className="card-in-late mt-5 text-white/55">
           {status === 'needs_review'
             ? 'A person will check it before we make the video. We’ll email you, usually within a day.'
-            : 'These videos are for sincere thank-yous and recovery milestones.'}
+            : occasion === 'recovery'
+              ? 'These videos are for sincere recovery celebrations.'
+              : 'These videos are for sincere thank-yous.'}
         </p>
         <Link href="/" className="card-in-late mt-10 text-white/55 underline-offset-4 hover:text-white hover:underline">
           Back home

@@ -23,7 +23,7 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-paper">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>
-          <span className="font-serif font-semibold text-pine">GratefulToday</span> · Thank-you and recovery videos, made with care.
+          <span className="font-serif font-semibold text-pine">GratefulToday</span> · Christmas thank-you videos, made with care.
         </p>
         <p>© {new Date().getFullYear()} Grateful Today Limited</p>
       </div>

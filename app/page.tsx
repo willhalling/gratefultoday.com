@@ -8,6 +8,7 @@ import {
   VIDEO_LENGTH,
   formatPrice,
   isFree,
+  isOffered,
 } from '@/lib/product';
 
 const SAMPLE_LINES = [
@@ -159,7 +160,8 @@ export default function HomePage() {
           </ul>
         </section>
 
-        {/* Recovery */}
+        {/* Recovery (only when offered: lib/product.ts OFFERED_OCCASIONS) */}
+        {isOffered('recovery') && (
         <section className="border-y border-line bg-paper">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-20">
             <div>
@@ -185,6 +187,7 @@ export default function HomePage() {
             </ul>
           </div>
         </section>
+        )}
 
         {/* Price */}
         <section className="bg-pine text-cream">

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import OrderFlow from '@/components/order/order-flow';
 import { THANKS_RELATIONSHIPS } from '@/lib/orders/types';
-import { OCCASIONS, type Occasion } from '@/lib/product';
+import { OCCASIONS, OFFERED_OCCASIONS, type Occasion } from '@/lib/product';
 
 export const metadata: Metadata = {
   title: 'Make a video — GratefulToday',
@@ -22,7 +22,8 @@ export default async function CreatePage({ searchParams }: { searchParams: Searc
   return (
     <OrderFlow
       initialOccasion={occasion}
-      occasionChosen={Boolean(type) || Boolean(initialRelationship)}
+      // With only one occasion on offer there's nothing to choose.
+      occasionChosen={Boolean(type) || Boolean(initialRelationship) || OFFERED_OCCASIONS.length === 1}
       initialRelationship={initialRelationship}
     />
   );

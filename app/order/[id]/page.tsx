@@ -30,7 +30,7 @@ const STATUS_COPY: Record<OrderStatus, { heading: string; body: string }> = {
   },
   declined: {
     heading: 'We can’t make this one',
-    body: 'GratefulToday videos are for sincere thank-yous and recovery celebrations, and this request doesn’t fit.',
+    body: 'GratefulToday videos are for sincere messages, and this request doesn’t fit.',
   },
 };
 

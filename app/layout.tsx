@@ -7,9 +7,9 @@ import '../global.css';
 const serif = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', display: 'swap' });
 const sans = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
-const title = 'GratefulToday — Personalised thank-you and recovery videos';
+const title = 'GratefulToday — Personalised Christmas thank-you videos';
 const description =
-  'A short narrated video that says it properly: thank you to a teacher, nurse or carer, or well done to someone marking a recovery milestone. Approve every word, send it in minutes.';
+  'A short narrated Christmas video that says thank you properly: to the teacher, nurse or carer who made this year better. Approve every word, send it in minutes.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gratefultoday.com'),

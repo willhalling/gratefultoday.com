@@ -44,6 +44,14 @@ export const OCCASIONS = {
 
 export type Occasion = keyof typeof OCCASIONS;
 
+/**
+ * Occasions the site offers to visitors. Recovery videos still work by direct
+ * link (/create?type=recovery) but aren't shown on the site; add 'recovery'
+ * back here to bring its home page section and form choice back.
+ */
+export const OFFERED_OCCASIONS: Occasion[] = ['thanks'];
+export const isOffered = (o: Occasion) => OFFERED_OCCASIONS.includes(o);
+
 /** Milestones offered on the recovery form. */
 export const RECOVERY_MILESTONES = [
   '24 hours',
