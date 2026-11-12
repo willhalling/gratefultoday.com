@@ -9,6 +9,13 @@ const optional = (max: number) => text(max).optional().default('');
 export const TONES = ['heartfelt', 'warm-and-light', 'funny'] as const;
 export const RECOVERY_TONES = ['heartfelt', 'warm-and-light'] as const;
 
+/**
+ * How the script is written: "quote" is short and striking (4–7 lines);
+ * "poetic" is a longer spoken-word piece (see POETIC_STYLE in ./prompts).
+ */
+export const SCRIPT_STYLES = ['quote', 'poetic'] as const;
+export type ScriptStyle = (typeof SCRIPT_STYLES)[number];
+
 export const THANKS_RELATIONSHIPS = [
   'teacher',
   'teaching assistant',
@@ -44,6 +51,7 @@ const shared = {
   religious: z.boolean().default(false),
   anything_to_avoid: optional(300),
   name_pronunciation: optional(80),
+  style: z.enum(SCRIPT_STYLES).default('quote'),
   email: z.string().trim().email('Please add a valid email address.').max(200),
 };
 

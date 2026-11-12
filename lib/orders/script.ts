@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { z } from 'zod';
 import type { Occasion } from '@/lib/product';
-import { EDIT_CHECK_SYSTEM_PROMPT, RECOVERY_SYSTEM_PROMPT, THANKS_SYSTEM_PROMPT } from './prompts';
+import { EDIT_CHECK_SYSTEM_PROMPT, POETIC_STYLE, RECOVERY_SYSTEM_PROMPT, THANKS_SYSTEM_PROMPT } from './prompts';
 import { ScriptResult, type RecoveryAnswers, type Script, type Season, type ThanksAnswers } from './types';
 
 export type { Season };
@@ -45,7 +45,9 @@ export async function writeScript(
     max_tokens: 16000,
     ...FALLBACK,
     output_config: { effort: 'medium', format: betaZodOutputFormat(ScriptResult) },
-    system: occasion === 'recovery' ? RECOVERY_SYSTEM_PROMPT : THANKS_SYSTEM_PROMPT,
+    system:
+      (occasion === 'recovery' ? RECOVERY_SYSTEM_PROMPT : THANKS_SYSTEM_PROMPT) +
+      (answers.style === 'poetic' ? `\n\n${POETIC_STYLE}` : ''),
     messages: [{ role: 'user', content: promptInput(answers, season, options.changeRequest) }],
   });
 

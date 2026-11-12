@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { PublicOrder } from '@/lib/orders/store';
-import { MAX_WORDS, wordCount } from '@/lib/orders/types';
+import { MAX_WORDS, wordCount, type ScriptStyle } from '@/lib/orders/types';
 import { RECOVERY_MILESTONES, type Occasion } from '@/lib/product';
 
 /**
@@ -16,7 +16,7 @@ const THANKS_WHO = ['teacher', 'teaching assistant', 'nurse', 'doctor', 'carer',
 const RECOVERY_WHO = ['partner', 'parent', 'son or daughter', 'brother or sister', 'friend', 'sponsor'];
 const MILESTONES = RECOVERY_MILESTONES.filter((m) => m !== 'Another milestone');
 
-type StepId = 'occasion' | 'name' | 'who' | 'milestone' | 'story' | 'from' | 'email';
+type StepId = 'occasion' | 'name' | 'who' | 'milestone' | 'story' | 'from' | 'style' | 'email';
 
 interface Draft {
   name: string;
@@ -26,10 +26,11 @@ interface Draft {
   milestoneOther: string;
   story: string;
   from: string;
+  style: '' | ScriptStyle;
   email: string;
 }
 
-const EMPTY: Draft = { name: '', who: '', whoOther: '', milestone: '', milestoneOther: '', story: '', from: '', email: '' };
+const EMPTY: Draft = { name: '', who: '', whoOther: '', milestone: '', milestoneOther: '', story: '', from: '', style: '', email: '' };
 
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 const firstName = (s: string) => s.trim().split(/\s+/)[0] ?? '';
@@ -49,6 +50,7 @@ function payload(occasion: Occasion, d: Draft) {
     email: d.email,
     relationship: d.who,
     relationship_other: other ? d.whoOther : '',
+    style: d.style || 'quote',
   };
   if (occasion === 'thanks') return { occasion, answers: { ...shared, what_they_did: d.story } };
   return {
@@ -84,6 +86,7 @@ export default function OrderFlow({
     ...(occasion === 'recovery' ? (['milestone'] as const) : []),
     'story',
     'from',
+    'style',
     'email',
   ];
   const [index, setIndex] = useState(0);
@@ -101,6 +104,7 @@ export default function OrderFlow({
     milestone: d.milestone !== '' && (d.milestone !== 'Another milestone' || d.milestoneOther.trim().length > 0),
     story: d.story.trim().length >= 12,
     from: d.from.trim().length > 0,
+    style: d.style !== '',
     email: /^\S+@\S+\.\S+$/.test(d.email.trim()),
   };
 
@@ -228,6 +232,29 @@ export default function OrderFlow({
           </Question>
         )}
 
+        {step === 'style' && (
+          <Question title="How should it sound?">
+            <div className="grid gap-3">
+              <BigChoice
+                title="Short and striking"
+                hint="A few lines they’ll want to keep. “You didn’t just teach her to read. You taught her she could be heard.”"
+                onClick={() => {
+                  set({ style: 'quote' });
+                  next();
+                }}
+              />
+              <BigChoice
+                title="Poetic"
+                hint="Softer and longer, like spoken word. “Some people teach lessons. Some people teach children that they’re worth listening to.”"
+                onClick={() => {
+                  set({ style: 'poetic' });
+                  next();
+                }}
+              />
+            </div>
+          </Question>
+        )}
+
         {step === 'email' && (
           <Question title="Where do we send it?" hint="Free. You’ll see every word first.">
             <BigInput
@@ -256,7 +283,7 @@ export default function OrderFlow({
 
 /** Choice screens move on by themselves, unless "Other" needs typing. */
 function showGo(step: StepId, d: Draft) {
-  if (step === 'occasion') return false;
+  if (step === 'occasion' || step === 'style') return false;
   if (step === 'who') return d.who === 'other';
   if (step === 'milestone') return d.milestone === 'Another milestone';
   return true;

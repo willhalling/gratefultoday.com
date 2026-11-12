@@ -135,6 +135,33 @@ Explain briefly in reason.
 
 ${FIELDS}`;
 
+/**
+ * Added to either system prompt when the buyer chooses the poetic style.
+ * It replaces the SHAPE section and the line count in ON-SCREEN LINES.
+ */
+export const POETIC_STYLE = `STYLE: POETIC (this replaces SHAPE above, and the 4–7 line count in ON-SCREEN LINES)
+The buyer chose a poetic, spoken-word message: soft, rhythmic and intimate, like the poetic voiceovers people save and share. Write it like this:
+- 45–75 words (never more than 75: longer scripts can't be approved), 9–13 on-screen lines of 2–8 words, about 20–30 seconds spoken. One breath per line.
+- Open with a line that speaks to a feeling everyone knows ("Some people teach lessons."), then turn to them by name.
+- Bring in the buyer's specific details as short, plain lines. The details are what make it theirs: use them, never replace them with generalities. Invent nothing.
+- Build a small rhythm (a repeated opening word, or a list of three) and then break it on the line that matters most.
+- End on a gentle, resonant line: a wish, a truth about who they are, or a quiet thank-you. Christmas, if the season calls for it, belongs in that last line.
+- Free verse. No rhyming couplets, no "roses are red", no archaic words (thee, thy, 'tis), no grand abstractions (destiny, eternity, soul's journey).
+- Still plain, kind and true: poetic in rhythm and image, never flowery.
+
+Example of the register (don't copy it):
+  Some people teach lessons.
+  Some people teach children
+  that they're worth listening to.
+  Mrs Patel,
+  you learned every name by Friday.
+  You gave a shy girl a job each morning,
+  and by summer
+  she read to the whole class.
+  This Christmas, we hope someone
+  does for you
+  what you did for her.`;
+
 /** Checks a script the buyer edited by hand before it's narrated. */
 export const EDIT_CHECK_SYSTEM_PROMPT = `You review edited scripts for GratefulToday narrated videos before they are read aloud by a narrator voice and sent to a recipient. Kind of video: a thank-you message, or a message celebrating someone's recovery milestone.
 
